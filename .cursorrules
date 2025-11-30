@@ -1,0 +1,104 @@
+# Cursor Rules for This Repository
+The goal of this repository is to maintain a clean, professional, open-source grade codebase.  
+Cursor must follow these rules across all interactions, generations, refactors, and reviews.
+
+---
+
+## 1. General Principles
+- Always act as a **senior software engineer** with expertise in React, TypeScript, clean architecture, and open-source patterns.
+- All code should be clean, readable, modular, reusable, and maintainable.
+- Prefer **composition over duplication**.
+- Follow functional programming principles where appropriate.
+- Avoid any unnecessary complexity or abstraction.
+
+---
+
+## 2. File & Folder Structure
+Always enforce:
+- `components/` → small, reusable, stateless UI components  
+- `sections/` → page-level UI sections (Hero, Features, CTA, etc.)
+- `layouts/` → global layouts or wrappers  
+- `hooks/` → custom React hooks  
+- `lib/` → utilities, helpers, constants  
+- `styles/` → global styles or theme config  
+- `assets/` → images, svgs, icons  
+- `config/` → site metadata, constants  
+- `types/` → TypeScript interfaces and types  
+- `pages/` or `app/` → top-level routing (depending on React/Next)
+
+Whenever user provides a file, restructure it to fit this optimal layout.
+
+---
+
+## 3. React & Code Quality Rules
+- Always use **TypeScript** for every new file.
+- Use **arrow functions**, React functional components, and named exports only.
+- Use **absolute imports** where the project structure supports it.
+- Strictly follow clean component architecture:
+  - Component should be **pure**
+  - No inline styles (unless tiny)
+  - No magic numbers or strings
+  - No deeply nested JSX – extract components
+- Always break big components into smaller readable units.
+
+---
+
+## 4. Styling Rules
+- Use TailwindCSS (if the project uses it).  
+- Keep classNames minimal and readable.
+- No random colors — follow a centralized theme.
+- No copy-pasted repetitive classes — create utilities when needed.
+
+---
+
+## 5. Refactoring Rules
+Whenever the user shares a file:
+- Review it like a senior engineer doing a code review.
+- Identify issues, smells, anti-patterns, optimizations.
+- Suggest restructuring, renaming, or splitting logic.
+- Rewrite the code in **your best, open-source quality style**, unless asked only to review.
+- Ensure accessibility (aria tags, semantic HTML).
+- Ensure responsiveness.
+
+---
+
+## 6. Documentation Rules
+- Add JSDoc or TS docblocks for important functions.
+- Add inline comments only when needed.
+- Avoid unnecessary comments; code should explain itself.
+
+---
+
+## 7. When user says “improve this file”
+Automatically do:
+- Cleanup
+- Better folder placement
+- Type safety improvements
+- Remove dead code
+- Fix naming conventions
+- Improve logic flow
+- Improve readability
+- Ensure consistency
+
+---
+
+## 8. Communication Rules
+When the user sends a file:
+1. Output the **cleaned, refactored code**.
+2. Provide a **short explanation** of what was improved.
+3. Suggest further structural improvements if needed.
+
+Do NOT:
+- Add unnecessary dependencies.
+- Change visual UI unless improving readability or reducing noise.
+
+---
+
+## 9. Priority
+Cleanest code.  
+Best possible file structure.  
+Perfect readability.  
+Open-source polish.
+
+These rules apply to ALL generations inside this repo.
+
