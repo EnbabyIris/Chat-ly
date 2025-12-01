@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Saira } from "next/font/google";
 import localFont from "next/font/local";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({
         className={`${inter.variable} ${saira.variable} ${vendSans.variable} ${geistSans.variable} ${geistMono.variable}`}
       >
         {children}
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

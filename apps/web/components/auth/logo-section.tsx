@@ -1,0 +1,62 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { PixelBlast } from '@/components/features/pixel-blast';
+
+export const LogoSection = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, filter: 'blur(5px)' }}
+      animate={{ opacity: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, filter: 'blur(5px)' }}
+      transition={{
+        delay: 0.1,
+        ease: 'easeOut',
+        duration: 0.1,
+      }}
+      className="flex items-center justify-center w-full h-[200px] absolute top-6 left-0 right-0 bottom-0"
+    >
+      <PixelBlast
+        variant="circle"
+        pixelSize={6}
+        color="#f0f0f0"
+        patternScale={3}
+        patternDensity={2}
+        pixelSizeJitter={0.5}
+        speed={0.6}
+        edgeFade={0.25}
+        transparent
+      />
+      <motion.div
+        initial={{ y: 20, opacity: 0, filter: 'blur(5px)' }}
+        animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+        exit={{ y: 20, opacity: 0, filter: 'blur(5px)' }}
+        transition={{
+          delay: 0.6,
+          type: 'spring',
+          stiffness: 300,
+          damping: 30,
+          duration: 0.4,
+        }}
+        className="flex items-center justify-center absolute bg-stone-100 p-1 rounded-md shadow-[inset_0px_2px_4px_rgba(0,0,0,0.3)]"
+      >
+        <motion.div
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 1.2 }}
+          transition={{
+            delay: 0.6,
+          }}
+          className="bg-white border border-stone-100 flex items-center justify-center px-8 gap-1 rounded-sm shadow-[0px_2px_4px_rgba(0,0,0,0.3)]"
+        >
+          <Image src="/logo.png" alt="logo" width={40} height={40} />
+          <h1 className="text-neutral-500 text-2xl font-medium font-saira pr-2">
+            Chat-ly
+          </h1>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
