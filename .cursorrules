@@ -1,104 +1,313 @@
-# Cursor Rules for This Repository
-The goal of this repository is to maintain a clean, professional, open-source grade codebase.  
-Cursor must follow these rules across all interactions, generations, refactors, and reviews.
+# Chat-Turbo Monorepo - Production-Ready Architecture Rules
+
+This is a **production-ready, open-source chat application** built with modern technologies. All code must maintain enterprise-grade quality, clean architecture, and scalability.
 
 ---
 
-## 1. General Principles
-- Always act as a **senior software engineer** with expertise in React, TypeScript, clean architecture, and open-source patterns.
-- All code should be clean, readable, modular, reusable, and maintainable.
-- Prefer **composition over duplication**.
-- Follow functional programming principles where appropriate.
-- Avoid any unnecessary complexity or abstraction.
+## 🏗️ **MONOREPO ARCHITECTURE**
+
+### **Apps Structure**
+- `apps/web/` → Next.js 16+ frontend with App Router
+- `apps/api/` → Express.js + Socket.IO backend with TypeScript
+- `apps/docs/` → Documentation site (optional)
+
+### **Packages Structure**
+- `packages/shared/` → Shared types, validations, constants
+- `packages/ui/` → Reusable UI component library
+- `packages/eslint-config/` → Shared ESLint configurations
+- `packages/typescript-config/` → Shared TypeScript configurations
 
 ---
 
-## 2. File & Folder Structure
-Always enforce:
-- `components/` → small, reusable, stateless UI components  
-- `sections/` → page-level UI sections (Hero, Features, CTA, etc.)
-- `layouts/` → global layouts or wrappers  
-- `hooks/` → custom React hooks  
-- `lib/` → utilities, helpers, constants  
-- `styles/` → global styles or theme config  
-- `assets/` → images, svgs, icons  
-- `config/` → site metadata, constants  
-- `types/` → TypeScript interfaces and types  
-- `pages/` or `app/` → top-level routing (depending on React/Next)
+## 🎯 **CORE ENGINEERING PRINCIPLES**
 
-Whenever user provides a file, restructure it to fit this optimal layout.
+1. **Senior-Level Code Quality**: Always write code as a senior software engineer
+2. **TypeScript First**: 100% TypeScript, no `any` types unless absolutely necessary
+3. **Clean Architecture**: Separation of concerns, SOLID principles
+4. **Composition over Inheritance**: Prefer functional composition
+5. **Performance by Design**: Optimize for scalability and performance
+6. **Security First**: Implement security best practices from the start
 
 ---
 
-## 3. React & Code Quality Rules
-- Always use **TypeScript** for every new file.
-- Use **arrow functions**, React functional components, and named exports only.
-- Use **absolute imports** where the project structure supports it.
-- Strictly follow clean component architecture:
-  - Component should be **pure**
-  - No inline styles (unless tiny)
-  - No magic numbers or strings
-  - No deeply nested JSX – extract components
-- Always break big components into smaller readable units.
+## 📁 **FRONTEND ARCHITECTURE (`apps/web/`)**
+
+### **Required Folder Structure**
+```
+apps/web/
+├── app/                    # Next.js App Router pages
+├── components/
+│   ├── ui/                 # Base UI components (Button, Input, etc.)
+│   ├── features/           # Feature-specific components
+│   ├── chat/               # Chat-related components
+│   ├── auth/               # Authentication components
+│   └── layouts/            # Layout components
+├── hooks/                  # Custom React hooks
+├── lib/
+│   ├── api/                # API client functions
+│   ├── stores/             # State management (Zustand/Redux)
+│   ├── constants/          # Application constants
+│   └── utils.ts            # Utility functions
+├── types/                  # Frontend-specific types
+├── assets/                 # Static assets (images, icons)
+└── config/                 # Configuration files
+```
+
+### **Component Architecture Rules**
+- **Pure Components**: All components must be pure and predictable
+- **Single Responsibility**: One component = one responsibility
+- **Composition Pattern**: Break large components into smaller, composable parts
+- **Props Interface**: Always define TypeScript interfaces for props
+- **Named Exports**: Use named exports, avoid default exports for components
+
+### **State Management**
+- Use **Zustand** for global state (lightweight, TypeScript-friendly)
+- Use **React Query/TanStack Query** for server state
+- Keep local state minimal with `useState`
+- Implement proper error boundaries
+
+### **Performance Rules**
+- Use `React.memo()` for expensive components
+- Implement proper `useMemo()` and `useCallback()` for optimization
+- Lazy load components with `React.lazy()`
+- Optimize images with Next.js Image component
 
 ---
 
-## 4. Styling Rules
-- Use TailwindCSS (if the project uses it).  
-- Keep classNames minimal and readable.
-- No random colors — follow a centralized theme.
-- No copy-pasted repetitive classes — create utilities when needed.
+## 🔧 **BACKEND ARCHITECTURE (`apps/api/`)**
+
+### **Required Folder Structure**
+```
+apps/api/
+├── src/
+│   ├── controllers/        # Route controllers
+│   ├── services/           # Business logic layer
+│   ├── models/             # Database models (Drizzle ORM)
+│   ├── middleware/         # Express middleware
+│   ├── routes/             # API route definitions
+│   ├── socket/             # Socket.IO event handlers
+│   ├── utils/              # Backend utilities
+│   ├── types/              # Backend-specific types
+│   ├── config/             # Configuration (DB, JWT, etc.)
+│   └── server.ts           # Main server file
+├── drizzle/                # Database migrations and schemas
+└── tests/                  # Backend tests
+```
+
+### **API Design Rules**
+- **RESTful Design**: Follow REST conventions
+- **Input Validation**: Use Zod for all input validation
+- **Error Handling**: Consistent error responses with proper HTTP codes
+- **Authentication**: JWT-based auth with refresh tokens
+- **Rate Limiting**: Implement rate limiting for all endpoints
+- **CORS**: Proper CORS configuration
+
+### **Database Rules**
+- **Drizzle ORM**: Use Drizzle for type-safe database operations
+- **Migrations**: All schema changes through migrations
+- **Indexing**: Proper database indexing for performance
+- **Transactions**: Use transactions for multi-step operations
 
 ---
 
-## 5. Refactoring Rules
-Whenever the user shares a file:
-- Review it like a senior engineer doing a code review.
-- Identify issues, smells, anti-patterns, optimizations.
-- Suggest restructuring, renaming, or splitting logic.
-- Rewrite the code in **your best, open-source quality style**, unless asked only to review.
-- Ensure accessibility (aria tags, semantic HTML).
-- Ensure responsiveness.
+## 📦 **SHARED PACKAGES RULES**
+
+### **`packages/shared/`**
+- **Types**: All shared TypeScript interfaces and types
+- **Validations**: Zod schemas for API contracts
+- **Constants**: Shared constants across frontend and backend
+- **Utilities**: Pure utility functions used by multiple apps
+
+### **`packages/ui/`**
+- **Design System**: Consistent design tokens and components
+- **Accessibility**: WCAG 2.1 AA compliance
+- **Documentation**: Storybook for component documentation
+- **Testing**: Unit tests for all components
 
 ---
 
-## 6. Documentation Rules
-- Add JSDoc or TS docblocks for important functions.
-- Add inline comments only when needed.
-- Avoid unnecessary comments; code should explain itself.
+## 🎨 **STYLING & DESIGN RULES**
+
+### **TailwindCSS Standards**
+- Use **design tokens** for colors, spacing, typography
+- Create **component variants** using `cva` (class-variance-authority)
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode**: Support for dark/light theme switching
+- **Consistent Spacing**: Use Tailwind spacing scale consistently
 
 ---
 
-## 7. When user says “improve this file”
-Automatically do:
-- Cleanup
-- Better folder placement
-- Type safety improvements
-- Remove dead code
-- Fix naming conventions
-- Improve logic flow
-- Improve readability
-- Ensure consistency
+## 🔒 **SECURITY REQUIREMENTS**
+
+### **Frontend Security**
+- **Input Sanitization**: Sanitize all user inputs
+- **XSS Protection**: Prevent cross-site scripting
+- **CSRF Protection**: Implement CSRF tokens
+- **Secure Storage**: Use secure storage for sensitive data
+
+### **Backend Security**
+- **Authentication**: JWT with proper expiration
+- **Authorization**: Role-based access control (RBAC)
+- **Input Validation**: Server-side validation for all inputs
+- **SQL Injection**: Use parameterized queries (Drizzle handles this)
+- **Rate Limiting**: Prevent abuse with rate limiting
 
 ---
 
-## 8. Communication Rules
-When the user sends a file:
-1. Output the **cleaned, refactored code**.
-2. Provide a **short explanation** of what was improved.
-3. Suggest further structural improvements if needed.
+## 🧪 **TESTING REQUIREMENTS**
 
-Do NOT:
-- Add unnecessary dependencies.
-- Change visual UI unless improving readability or reducing noise.
+### **Frontend Testing**
+- **Unit Tests**: Jest + React Testing Library
+- **Integration Tests**: Test user workflows
+- **E2E Tests**: Playwright for critical paths
+- **Component Tests**: Storybook interaction tests
+
+### **Backend Testing**
+- **Unit Tests**: Jest for business logic
+- **Integration Tests**: Test API endpoints
+- **Database Tests**: Test database operations
+- **Socket Tests**: Test real-time functionality
 
 ---
 
-## 9. Priority
-Cleanest code.  
-Best possible file structure.  
-Perfect readability.  
-Open-source polish.
+## 📊 **PERFORMANCE STANDARDS**
 
-These rules apply to ALL generations inside this repo.
+### **Frontend Performance**
+- **Core Web Vitals**: Meet Google's CWV standards
+- **Bundle Size**: Keep JavaScript bundles under 250KB
+- **Image Optimization**: Use Next.js Image with proper formats
+- **Code Splitting**: Implement route-based code splitting
 
+### **Backend Performance**
+- **Response Time**: API responses under 200ms
+- **Database Queries**: Optimize with proper indexing
+- **Caching**: Implement Redis for frequently accessed data
+- **Connection Pooling**: Use connection pooling for database
+
+---
+
+## 🚀 **DEPLOYMENT & DEVOPS**
+
+### **Environment Configuration**
+- **Environment Variables**: Use `.env` files properly
+- **Configuration Validation**: Validate all config at startup
+- **Secrets Management**: Never commit secrets to version control
+
+### **CI/CD Pipeline**
+- **Automated Testing**: All tests must pass before merge
+- **Type Checking**: TypeScript compilation must succeed
+- **Linting**: ESLint and Prettier checks
+- **Build Verification**: Successful build required
+
+---
+
+## 📝 **CODE QUALITY STANDARDS**
+
+### **TypeScript Rules**
+```typescript
+// ✅ Good: Proper interface definition
+interface ChatMessage {
+  id: string;
+  content: string;
+  senderId: string;
+  chatId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ✅ Good: Proper error handling
+const sendMessage = async (message: ChatMessage): Promise<Result<ChatMessage, Error>> => {
+  try {
+    const result = await api.post('/messages', message);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: error as Error };
+  }
+};
+```
+
+### **React Component Standards**
+```typescript
+// ✅ Good: Proper component structure
+interface MessageBubbleProps {
+  message: ChatMessage;
+  isOwn: boolean;
+  onDelete?: (messageId: string) => void;
+}
+
+export const MessageBubble = ({ message, isOwn, onDelete }: MessageBubbleProps) => {
+  const handleDelete = useCallback(() => {
+    onDelete?.(message.id);
+  }, [message.id, onDelete]);
+
+  return (
+    <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+      {/* Component JSX */}
+    </div>
+  );
+};
+```
+
+---
+
+## 🔄 **REAL-TIME FEATURES**
+
+### **Socket.IO Implementation**
+- **Event Typing**: Type all socket events
+- **Error Handling**: Proper error handling for socket events
+- **Reconnection**: Handle connection drops gracefully
+- **Room Management**: Efficient room joining/leaving
+
+---
+
+## 📚 **DOCUMENTATION REQUIREMENTS**
+
+### **Code Documentation**
+- **JSDoc Comments**: For all public APIs
+- **README Files**: Comprehensive setup and usage instructions
+- **API Documentation**: OpenAPI/Swagger for backend APIs
+- **Component Documentation**: Storybook for UI components
+
+### **Architecture Documentation**
+- **System Architecture**: High-level system design
+- **Database Schema**: ERD and table documentation
+- **API Contracts**: Request/response schemas
+- **Deployment Guide**: Step-by-step deployment instructions
+
+---
+
+## 🎯 **IMMEDIATE REFACTORING PRIORITIES**
+
+1. **Extract Mock Data**: Move mock data to separate service layer
+2. **Implement Proper Types**: Create comprehensive type definitions
+3. **Add Error Boundaries**: Implement React error boundaries
+4. **State Management**: Replace useState with proper state management
+5. **API Integration**: Replace mock functions with real API calls
+6. **Testing Setup**: Add comprehensive test suites
+7. **Performance Optimization**: Implement React.memo and proper memoization
+8. **Accessibility**: Add proper ARIA labels and keyboard navigation
+
+---
+
+## ⚡ **DEVELOPMENT WORKFLOW**
+
+### **Before Starting Any Feature**
+1. Define TypeScript interfaces first
+2. Create API contracts (if backend changes needed)
+3. Write tests (TDD approach)
+4. Implement feature with proper error handling
+5. Add documentation and comments
+6. Performance testing and optimization
+
+### **Code Review Checklist**
+- [ ] TypeScript compilation passes
+- [ ] All tests pass
+- [ ] ESLint/Prettier formatting
+- [ ] Performance considerations addressed
+- [ ] Security implications reviewed
+- [ ] Accessibility standards met
+- [ ] Documentation updated
+
+---
+
+**Remember**: This is a production-ready, open-source application. Every line of code should reflect enterprise-grade quality and maintainability.

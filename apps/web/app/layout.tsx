@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Saira } from "next/font/google";
 import localFont from "next/font/local";
-import { Toaster } from "sonner";
+import { AuthProvider } from "@/contexts/auth-context";
+import { SocketProvider } from "@/contexts/socket-context";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,21 +18,17 @@ const saira = Saira({
   display: "swap",
 });
 
-  
-const vendSans = localFont({
+const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
-  variable: "--font-vend",
+  variable: "--font-geist-sans",
   display: "swap",
   fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -46,10 +44,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${saira.variable} ${vendSans.variable} ${geistSans.variable} ${geistMono.variable}`}
+        className={`${inter.variable} ${saira.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster position="bottom-right" />
+        <QueryProvider>
+          <AuthProvider>
+            <SocketProvider>
+              {children}
+            </SocketProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

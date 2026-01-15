@@ -101,7 +101,7 @@ export const Footer = () => {
             <div key={title} className="md:col-span-1">
               <h3 className="text-sm font-semibold font-inter mb-4 text-neutral-500">{title}</h3>
               <ul className="space-y-3">
-                {links.map((link) => (
+                {links.map((link: { name: string; href: string }) => (
                   <li key={link.name}>
                     <a
                       href={link.href}

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuthPage } from '@/hooks/use-auth-page';
 import { useCursorPosition } from '@/hooks/use-cursor-position';
 import { useAnimationConfig } from '@/hooks/use-animation-config';
-import { ChatListItem } from '@/components/ui/chat-list-item';
+import { ChatListItem } from '@/components/chat/chat-list-item';
 import { cn } from '@/lib/utils';
 import { TIMING } from '@/lib/constants/timing';
 import { SIZES } from '@/lib/constants/sizes';
@@ -110,7 +110,7 @@ export const Step2ChatDemo = () => {
     useCursorPosition();
   const { spring } = useAnimationConfig();
 
-  const dummyUser = useMemo(() => ({ _id: 'user1', name: 'Current User' }), []);
+  const dummyUser = useMemo(() => ({ _id: 'user1', name: 'Current User', pic: '' }), []);
   const dummyOnlinePeople = useMemo(() => ['user2', 'user3'], []);
 
   const handleSetSelectedChat = useCallback(() => {}, []);
@@ -161,12 +161,12 @@ export const Step2ChatDemo = () => {
           className="relative"
         >
           <ChatListItem
-            chat={chat}
-            loggedUser={dummyUser}
-            user={dummyUser}
-            selectedChat={index === activeChatIndex ? chat : null}
+            chat={chat as unknown as import('@repo/shared').Chat}
+            loggedUser={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
+            user={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
+            selectedChat={index === activeChatIndex ? (chat as unknown as import('@repo/shared').Chat) : null}
             onlinepeople={dummyOnlinePeople}
-            setSelectedChat={handleSetSelectedChat}
+            setSelectedChat={handleSetSelectedChat as (chat: import('@repo/shared').Chat) => void}
           />
         </div>
       ))}

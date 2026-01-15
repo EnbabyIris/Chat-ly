@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
 import { useAnimationConfig } from '@/hooks/use-animation-config';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,14 +11,6 @@ interface LoginProps {
 }
 
 export const Login = ({ onSwitchToSignup }: LoginProps) => {
-  const { handleLogin, loading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const submitHandler = async () => {
-    await handleLogin(email, password);
-  };
-
   const { spring, duration } = useAnimationConfig();
 
   return (
@@ -36,9 +26,7 @@ export const Login = ({ onSwitchToSignup }: LoginProps) => {
         id="email"
         label="Email Address"
         type="email"
-        value={email}
         placeholder="jack.sparrow@gmail.com"
-        onChange={(e) => setEmail(e.target.value)}
         required
       />
 
@@ -46,21 +34,14 @@ export const Login = ({ onSwitchToSignup }: LoginProps) => {
         id="password"
         label="Password"
         type="password"
-        value={password}
         placeholder="Enter password"
-        onChange={(e) => setPassword(e.target.value)}
         showPasswordToggle
         required
       />
 
       <div className="w-5/6 mx-auto h-px bg-neutral-300 my-1"></div>
 
-      <Button
-        onClick={submitHandler}
-        loading={loading}
-        loadingText="Loading..."
-        variant="primary"
-      >
+      <Button variant="primary">
         Login
       </Button>
 

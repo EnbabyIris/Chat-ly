@@ -367,7 +367,7 @@ export const MultilingualBox = ({ className = '' }: MultilingualBoxProps) => {
       setCurrentLanguage((prev) => {
         const currentIndex = languages.indexOf(prev);
         const nextIndex = (currentIndex + 1) % languages.length;
-        return languages[nextIndex];
+        return languages[nextIndex] ?? languages[0] ?? '';
       });
     }, 5000);
 

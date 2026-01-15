@@ -96,12 +96,15 @@ export const Step4ChatDemo = () => {
     const timeoutId = setTimeout(() => {
       setState((prev) => {
         const updated = [...prev.messages];
-        updated[messageIndex] = {
-          ...updated[messageIndex],
-          text: isRevert
-            ? updated[messageIndex].original
-            : updated[messageIndex].translated,
-        };
+        const currentMessage = updated[messageIndex];
+        if (currentMessage) {
+          updated[messageIndex] = {
+            ...currentMessage,
+            text: isRevert
+              ? currentMessage.original
+              : currentMessage.translated,
+          };
+        }
         messagesRef.current = updated;
         return { ...prev, messages: updated, translatingIndex: null };
       });
@@ -132,6 +135,8 @@ export const Step4ChatDemo = () => {
       }
 
       const step = translationSequence[stepIndex];
+      if (!step) return;
+      
       const isCurrentUser =
         messagesRef.current[step.messageIndex]?.isCurrentUser ?? false;
 

@@ -156,10 +156,10 @@ export const AudioCallBox = ({ className = '' }: AudioCallBoxProps) => {
           layout
           className="absolute border border-neutral-200 px-2 py-1 rounded-lg flex gap-2"
         >
-          <CircleAvatar person={people[0]} opacity={isHovered ? 0.5 : 1} size="w-10 h-10" />
+          <CircleAvatar person={people[0]!} opacity={isHovered ? 0.5 : 1} size="w-10 h-10" />
           {!isHovered && (
             <motion.div layoutId="emily-avatar">
-              <CircleAvatar person={people[5]} size="w-10 h-10" />
+              <CircleAvatar person={people[5]!} size="w-10 h-10" />
             </motion.div>
           )}
         </motion.div>

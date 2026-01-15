@@ -7,7 +7,7 @@ import { useCursorPosition } from '@/hooks/use-cursor-position';
 import { useAnimationConfig } from '@/hooks/use-animation-config';
 import { Input } from '@/components/ui/input';
 import { GoButton } from '@/components/ui/go-button';
-import { UserListItem } from '@/components/ui/user-list-item';
+import { UserListItem } from '@/components/chat/user-list-item';
 import { ChatLoading } from '@/components/ui/chat-loading';
 import { TIMING } from '@/lib/constants/timing';
 import { SIZES } from '@/lib/constants/sizes';
