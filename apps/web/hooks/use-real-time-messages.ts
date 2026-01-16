@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '@/contexts/socket-context';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
 import { queryKeys } from '@/lib/api/queries';
-import type { ChatListItem, Message, Notification, NotificationSummary } from '@repo/shared/types';
+import type { ChatListItem, Message } from '@repo/shared/types';
 
 interface UseRealTimeMessagesParams {
   selectedChatId?: string;
@@ -27,13 +27,7 @@ interface MessageListData {
   nextCursor?: string;
 }
 
-// Optimized message cache using Map for O(1) lookups
-interface OptimizedMessageCache {
-  messageMap: Map<string, Message>; // messageId -> Message
-  messageOrder: string[]; // Array of messageIds in chronological order
-  hasMore: boolean;
-  nextCursor?: string;
-}
+
 
 interface TypingUpdateData {
   chatId: string;
@@ -114,7 +108,7 @@ export const useRealTimeMessages = ({
             content: message.content,
             senderId: message.senderId ?? '',
             senderName: message.sender?.name ?? (chat.latestMessage?.senderName || 'User'),
-            messageType: (message.messageType as any) || 'text',
+            messageType: message.messageType || 'text',
             createdAt: new Date(message.createdAt),
           },
           updatedAt: new Date(message.createdAt),
@@ -125,57 +119,7 @@ export const useRealTimeMessages = ({
       }
     );
 
-    // Create notification if message is from another user and not in current chat
-    if (message.senderId !== currentUserId && message.chatId !== selectedChatId) {
-      console.log('🔔 Creating notification for message from different chat');
-
-      // Create notification object
-      const notification: Notification = {
-        id: `msg_${message.id}_${Date.now()}`, // Temporary ID until backend provides real ID
-        userId: currentUserId || '',
-        type: 'message',
-        title: message.sender?.name || 'Someone',
-        message: message.content.length > 50
-          ? `${message.content.substring(0, 50)}...`
-          : message.content,
-        chatId: message.chatId,
-        messageId: message.id,
-        senderId: message.senderId ?? undefined,
-        senderName: message.sender?.name ?? undefined,
-        senderAvatar: message.sender?.avatar ?? undefined,
-        isRead: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Update notification cache directly (optimistic update)
-      const notificationListKey = queryKeys.notifications.list();
-      const currentNotificationData = queryClient.getQueryData<NotificationSummary>(notificationListKey);
-
-      if (currentNotificationData) {
-        const updatedData: NotificationSummary = {
-          ...currentNotificationData,
-          notifications: [notification, ...currentNotificationData.notifications],
-          unreadCount: currentNotificationData.unreadCount + 1,
-        };
-        queryClient.setQueryData<NotificationSummary>(notificationListKey, updatedData);
-      } else {
-        // If no notification data exists, create initial structure
-        const initialData: NotificationSummary = {
-          notifications: [notification],
-          unreadCount: 1,
-        };
-        queryClient.setQueryData<NotificationSummary>(notificationListKey, initialData);
-      }
-
-      // Update unread count cache
-      const unreadCountKey = queryKeys.notifications.unreadCount();
-      const currentUnreadCount = queryClient.getQueryData<number>(unreadCountKey) || 0;
-      queryClient.setQueryData<number>(unreadCountKey, currentUnreadCount + 1);
-
-      console.log('✅ Notification created for new message');
-    }
-  }, [queryClient, selectedChatId]);
+  }, [queryClient]);
 
   // Handle message DB save confirmation
   const handleMessageDbSaved = useCallback((data: { tempId: string; realMessage: Message }) => {

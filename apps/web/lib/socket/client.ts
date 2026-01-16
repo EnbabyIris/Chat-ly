@@ -85,7 +85,7 @@ class SocketClient {
       }
     });
 
-    this.socket.on('authenticated', (data) => {
+    (this.socket as any).on('authenticated', (data: any) => {
       console.log('✅ Socket.IO authenticated:', data);
     });
   }

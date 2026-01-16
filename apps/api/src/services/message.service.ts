@@ -16,15 +16,25 @@ export class MessageService {
     }
 
     // Create message
+    const messageData: any = {
+      chatId: data.chatId,
+      senderId: userId,
+      content: data.content,
+      messageType: data.messageType || 'text',
+    };
+
+    // Add optional fields if they exist
+    if (data.attachmentUrl) messageData.attachmentUrl = data.attachmentUrl;
+    if (data.attachmentName) messageData.attachmentName = data.attachmentName;
+    if (data.attachmentSize) messageData.attachmentSize = data.attachmentSize;
+    if (data.latitude !== undefined) messageData.latitude = data.latitude.toString();
+    if (data.longitude !== undefined) messageData.longitude = data.longitude.toString();
+    if (data.locationAddress) messageData.locationAddress = data.locationAddress;
+    if (data.replyToId) messageData.replyToId = data.replyToId;
+
     const [newMessage] = await db
       .insert(messages)
-      .values({
-        chatId: data.chatId,
-        senderId: userId,
-        content: data.content,
-        messageType: data.messageType || 'text',
-        attachmentUrl: data.attachmentUrl,
-      })
+      .values(messageData)
       .returning();
 
     // Fetch message with sender info

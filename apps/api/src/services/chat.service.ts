@@ -226,4 +226,307 @@ export class ChatService {
 
     return !!participant;
   }
+
+  // ================================
+  // GROUP MANAGEMENT METHODS
+  // ================================
+
+  async addParticipants(chatId: string, userId: string, participantIds: string[]) {
+    // Verify chat exists and is a group
+    const chat = await db.query.chats.findFirst({
+      where: eq(chats.id, chatId),
+    });
+
+    if (!chat) {
+      throw new NotFoundError(ERROR_MESSAGES.CHAT_NOT_FOUND);
+    }
+
+    if (!chat.isGroupChat) {
+      throw new ValidationError('Cannot add participants to direct chat');
+    }
+
+    // Verify user is admin
+    const userParticipant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!userParticipant || userParticipant.role !== 'admin') {
+      throw new ForbiddenError('Only admins can add participants');
+    }
+
+    // Check for existing participants and filter out duplicates
+    const existingParticipants = await db.query.chatParticipants.findMany({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        inArray(chatParticipants.userId, participantIds),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    const existingUserIds = existingParticipants.map(p => p.userId);
+    const newParticipantIds = participantIds.filter(id => !existingUserIds.includes(id));
+
+    if (newParticipantIds.length === 0) {
+      throw new ValidationError('All participants are already in the group');
+    }
+
+    // Add new participants
+    await db.insert(chatParticipants).values(
+      newParticipantIds.map(participantId => ({
+        chatId,
+        userId: participantId,
+        role: 'member' as const,
+      })),
+    );
+
+    // Update chat updated_at timestamp
+    await db
+      .update(chats)
+      .set({ updatedAt: new Date() })
+      .where(eq(chats.id, chatId));
+
+    return { addedCount: newParticipantIds.length };
+  }
+
+  async removeParticipant(chatId: string, userId: string, participantId: string) {
+    // Verify chat exists and is a group
+    const chat = await db.query.chats.findFirst({
+      where: eq(chats.id, chatId),
+    });
+
+    if (!chat) {
+      throw new NotFoundError(ERROR_MESSAGES.CHAT_NOT_FOUND);
+    }
+
+    if (!chat.isGroupChat) {
+      throw new ValidationError('Cannot remove participants from direct chat');
+    }
+
+    // Verify user is admin or removing themselves
+    const userParticipant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!userParticipant) {
+      throw new ForbiddenError(ERROR_MESSAGES.NOT_CHAT_PARTICIPANT);
+    }
+
+    // Check if target participant exists
+    const targetParticipant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, participantId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!targetParticipant) {
+      throw new NotFoundError('Participant not found in group');
+    }
+
+    // Only admins can remove others, or users can remove themselves
+    if (participantId !== userId && userParticipant.role !== 'admin') {
+      throw new ForbiddenError('Only admins can remove other participants');
+    }
+
+    // Cannot remove the only admin unless they're removing themselves and there's another admin
+    if (targetParticipant.role === 'admin') {
+      const adminParticipants = await db.query.chatParticipants.findMany({
+        where: and(
+          eq(chatParticipants.chatId, chatId),
+          eq(chatParticipants.role, 'admin'),
+          isNull(chatParticipants.leftAt),
+        ),
+      });
+
+      if (adminParticipants.length <= 1) {
+        throw new ValidationError('Cannot remove the only admin from the group');
+      }
+    }
+
+    // Soft delete by setting leftAt timestamp
+    await db
+      .update(chatParticipants)
+      .set({ leftAt: new Date() })
+      .where(and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, participantId),
+      ));
+
+    // Update chat updated_at timestamp
+    await db
+      .update(chats)
+      .set({ updatedAt: new Date() })
+      .where(eq(chats.id, chatId));
+
+    return { removed: true };
+  }
+
+  async transferAdmin(chatId: string, userId: string, newAdminId: string) {
+    // Verify chat exists and is a group
+    const chat = await db.query.chats.findFirst({
+      where: eq(chats.id, chatId),
+    });
+
+    if (!chat) {
+      throw new NotFoundError(ERROR_MESSAGES.CHAT_NOT_FOUND);
+    }
+
+    if (!chat.isGroupChat) {
+      throw new ValidationError('Cannot transfer admin in direct chat');
+    }
+
+    // Verify user is current admin
+    const userParticipant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!userParticipant || userParticipant.role !== 'admin') {
+      throw new ForbiddenError('Only current admin can transfer admin role');
+    }
+
+    // Verify new admin is a participant
+    const newAdminParticipant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, newAdminId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!newAdminParticipant) {
+      throw new NotFoundError('New admin must be a participant in the group');
+    }
+
+    // Transfer admin role in transaction
+    await db.transaction(async (tx) => {
+      // Remove admin role from current admin
+      await tx
+        .update(chatParticipants)
+        .set({ role: 'member' })
+        .where(and(
+          eq(chatParticipants.chatId, chatId),
+          eq(chatParticipants.userId, userId),
+        ));
+
+      // Add admin role to new admin
+      await tx
+        .update(chatParticipants)
+        .set({ role: 'admin' })
+        .where(and(
+          eq(chatParticipants.chatId, chatId),
+          eq(chatParticipants.userId, newAdminId),
+        ));
+
+      // Update chat admin reference
+      await tx
+        .update(chats)
+        .set({
+          groupAdmin: newAdminId,
+          updatedAt: new Date(),
+        })
+        .where(eq(chats.id, chatId));
+    });
+
+    return { transferred: true, newAdminId };
+  }
+
+  async archiveGroup(chatId: string, userId: string) {
+    // Verify chat exists and is a group
+    const chat = await db.query.chats.findFirst({
+      where: eq(chats.id, chatId),
+    });
+
+    if (!chat) {
+      throw new NotFoundError(ERROR_MESSAGES.CHAT_NOT_FOUND);
+    }
+
+    if (!chat.isGroupChat) {
+      throw new ValidationError('Cannot archive direct chat');
+    }
+
+    // Verify user is participant
+    const participant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!participant) {
+      throw new ForbiddenError(ERROR_MESSAGES.NOT_CHAT_PARTICIPANT);
+    }
+
+    // Archive the chat for this user (soft delete their participation)
+    await db
+      .update(chatParticipants)
+      .set({
+        leftAt: new Date(),
+        isActive: false,
+      })
+      .where(and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+      ));
+
+    return { archived: true };
+  }
+
+  async deleteGroup(chatId: string, userId: string, hardDelete: boolean = false) {
+    // Verify chat exists and is a group
+    const chat = await db.query.chats.findFirst({
+      where: eq(chats.id, chatId),
+    });
+
+    if (!chat) {
+      throw new NotFoundError(ERROR_MESSAGES.CHAT_NOT_FOUND);
+    }
+
+    if (!chat.isGroupChat) {
+      throw new ValidationError('Cannot delete direct chat');
+    }
+
+    // Verify user is admin
+    const participant = await db.query.chatParticipants.findFirst({
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
+    });
+
+    if (!participant || participant.role !== 'admin') {
+      throw new ForbiddenError('Only admins can delete the group');
+    }
+
+    if (hardDelete) {
+      // Hard delete: remove chat and all related data
+      await db.delete(chats).where(eq(chats.id, chatId));
+      // Related data (participants, messages) will be cascade deleted due to foreign key constraints
+    } else {
+      // Soft delete: archive all participants
+      await db
+        .update(chatParticipants)
+        .set({
+          leftAt: new Date(),
+          isActive: false,
+        })
+        .where(eq(chatParticipants.chatId, chatId));
+    }
+
+    return { deleted: true, hardDelete };
+  }
 }

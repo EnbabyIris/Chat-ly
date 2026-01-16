@@ -5,34 +5,30 @@ import { ChatSidebar } from '@/components/chat/chat-sidebar';
 import { ChatArea } from '@/components/chat/chat-area';
 import { FloatingHeader } from '@/components/layouts/floating-header';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { CreateGroupDialog } from '@/components/features/create-group-dialog';
 import { useChatData } from '@/hooks/use-chat-data';
 import { useChatFilters } from '@/hooks/use-chat-filters';
 import { useChatActions } from '@/hooks/use-chat-actions';
 import { useRealTimeMessages } from '@/hooks/use-real-time-messages';
-import { useRealTimeNotifications } from '@/hooks/use-real-time-notifications';
 import { useAuth } from '@/contexts/auth-context';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { getErrorMessage } from '@/lib/utils/error-messages';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ChatListItem, ActiveTab } from '@repo/shared';
 
 function ChatsPageContent() {
   const [selectedChat, setSelectedChat] = useState<ChatListItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<ActiveTab>('chats');
+  const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const { user } = useAuth();
   const { isOffline } = useNetworkStatus();
   const { onlineUsers } = useOnlineStatus();
   const queryClient = useQueryClient();
 
-  // Debounce search query to avoid excessive filtering/API calls
-  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
-
   // Get data from custom hooks
   const { users, chats, currentUser, onlinePeople, isLoading, error } = useChatData();
-  
+
   // Create consistent current user (prefer auth context over API data)
   const activeCurrentUser = user ? {
     _id: user.id,
@@ -42,11 +38,11 @@ function ChatsPageContent() {
     isOnline: true,
   } : currentUser || { _id: '', name: '', pic: '', email: '', isOnline: false };
 
-  // Filter data based on debounced search query
+  // Filter data (no search query needed)
   const { filteredUsers, filteredChats } = useChatFilters({
     users,
     chats,
-    searchQuery: debouncedSearchQuery,
+    searchQuery: '',
     currentUser: activeCurrentUser,
   });
 
@@ -64,18 +60,45 @@ function ChatsPageContent() {
     currentUserId: activeCurrentUser._id,
   });
 
-  // Setup real-time notification handling
-  useRealTimeNotifications({
-    currentUserId: activeCurrentUser._id,
-  });
+  // Handle successful group creation
+  const handleGroupCreated = useCallback((chat: any) => {
+    // Close the dialog first
+    setIsCreateGroupDialogOpen(false);
 
-  // Notification navigation handler
-  const handleNotificationChatSelect = useCallback((chatId: string) => {
-    const chat = chats.find(c => c.id === chatId);
-    if (chat) {
-      setSelectedChat(chat);
-    }
-  }, [chats]);
+    // Convert to ChatListItem format and select it
+    const chatListItem: ChatListItem = {
+      id: chat.id,
+      name: chat.name,
+      isGroupChat: chat.isGroupChat,
+      avatar: chat.avatar,
+      participants: chat.participants?.map((p: any) => ({
+        id: p.user?.id || p.userId,
+        name: p.user?.name || 'Unknown',
+        email: p.user?.email || '',
+        avatar: p.user?.avatar || null,
+        isOnline: p.user?.isOnline || false,
+        lastSeen: p.user?.lastSeen || null,
+      })) || [],
+      latestMessage: chat.latestMessage ? {
+        id: chat.latestMessage.id,
+        content: chat.latestMessage.content,
+        senderId: chat.latestMessage.senderId || '',
+        senderName: chat.latestMessage.sender?.name || 'User',
+        messageType: chat.latestMessage.messageType,
+        createdAt: new Date(chat.latestMessage.createdAt),
+      } : undefined,
+      unreadCount: 0,
+      updatedAt: new Date(chat.updatedAt),
+    };
+
+    setSelectedChat(chatListItem);
+    setActiveTab('chats');
+
+    // Invalidate queries to refresh the chat list
+    queryClient.invalidateQueries({ queryKey: ['chats'] });
+  }, [setSelectedChat, setActiveTab, queryClient]);
+
+
 
   // Handle loading state
   if (isLoading) {
@@ -125,11 +148,9 @@ function ChatsPageContent() {
       {/* Floating Header */}
       {activeCurrentUser._id && (
         <FloatingHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
           currentUser={activeCurrentUser}
-          onChatSelect={handleNotificationChatSelect}
-          onTabChange={setActiveTab}
+          onCreateGroup={() => setIsCreateGroupDialogOpen(true)}
+          onUserSelect={handleStartChat}
         />
       )}
 
@@ -154,6 +175,13 @@ function ChatsPageContent() {
           onSendFile={handleSendFile}
         />
       </div>
+
+      {/* Create Group Dialog */}
+      <CreateGroupDialog
+        isOpen={isCreateGroupDialogOpen}
+        onClose={() => setIsCreateGroupDialogOpen(false)}
+        onSuccess={handleGroupCreated}
+      />
     </div>
   );
 }

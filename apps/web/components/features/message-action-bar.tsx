@@ -44,7 +44,7 @@ const MessageActionBar = ({
   }, [aiMessage, displayText]);
 
   return (
-    <div className="relative py-1 w-full focus:outline-none outline-none bg-white shadow-sm">
+    <div className="relative py-1 w-full focus:outline-none outline-none bg-white ">
       {/* Desktop View - Horizontal Icons */}
       <div className="absolute left-2 top-1/2 gap-1 -translate-y-1/2 items-center z-10 hidden md:flex">
         <button
@@ -52,7 +52,7 @@ const MessageActionBar = ({
           aria-label="Upload File"
           onClick={handleFileUpload}
         >
-          <FiFile className="h-4 w-4 text-[#a3a3a3] hover:text-green-500 transition-all duration-200" />
+          <FiFile className="h-4 w-4 text-[#a3a3a3] hover:text-neutral-500 transition-all duration-200" />
         </button>
 
         <div className="w-px h-4 bg-stone-300"></div>
@@ -65,7 +65,7 @@ const MessageActionBar = ({
           <MdMic className={`h-4 w-4 ${
             isListening
               ? "text-red-500"
-              : "text-neutral-400 hover:text-green-500 transition-all duration-200"
+              : "text-neutral-400 hover:text-neutral-500 transition-all duration-200"
           }`} />
         </button>
 
@@ -77,7 +77,7 @@ const MessageActionBar = ({
           onClick={handleSendLocation}
           disabled={isGettingLocation}
         >
-          <MdLocationOn className="h-4 w-4 text-[#a3a3a3] hover:text-green-500 transition-all duration-200" />
+          <MdLocationOn className="h-4 w-4 text-[#a3a3a3] hover:text-neutral-500 transition-all duration-200" />
         </button>
         <div className="w-px h-4 bg-stone-300"></div>
       </div>

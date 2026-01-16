@@ -5,7 +5,6 @@ import type { AuthRequest } from '../middleware/auth';
 import { HTTP_STATUS } from '@repo/shared/constants';
 import type { SendMessageDTO, UpdateMessageDTO } from '@repo/shared/types';
 import type { MessageIdParam, GetChatMessagesInput } from '@repo/shared/validations';
-import type { MessageData } from '../socket/types';
 
 const messageService = new MessageService();
 

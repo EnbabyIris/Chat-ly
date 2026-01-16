@@ -3,10 +3,14 @@ export interface Message {
   chatId: string;
   senderId: string | null;
   content: string;
-  messageType: 'text' | 'image' | 'file' | 'system';
+  messageType: 'text' | 'image' | 'file' | 'location' | 'system';
   attachmentUrl: string | null;
   attachmentName: string | null;
   attachmentSize: string | null;
+  // Location-specific fields
+  latitude?: number | null;
+  longitude?: number | null;
+  locationAddress?: string | null;
   isEdited: boolean;
   isDeleted: boolean;
   editedAt: Date | null;
@@ -41,15 +45,25 @@ export interface MessageReadReceipt {
 export interface SendMessageDTO {
   chatId: string;
   content: string;
-  messageType?: 'text' | 'image' | 'file';
+  messageType?: 'text' | 'image' | 'file' | 'location';
   attachmentUrl?: string;
   attachmentName?: string;
   attachmentSize?: string;
+  // Location-specific fields for location messages
+  latitude?: number;
+  longitude?: number;
+  locationAddress?: string;
   replyToId?: string;
 }
 
 export interface UpdateMessageDTO {
   content: string;
+}
+
+export interface LocationMessage {
+  latitude: number;
+  longitude: number;
+  address?: string;
 }
 
 export interface MessageWithContext extends Message {

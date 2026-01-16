@@ -4,7 +4,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'white';
+  variant?: 'primary' | 'secondary' | 'white' | 'black';
   loading?: boolean;
   loadingText?: string;
 }
@@ -32,6 +32,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-gradient-to-t from-green-400 to-green-500 border border-black/5 text-white',
       secondary: 'bg-green-500 hover:bg-green-600 border border-black/5 text-white',
       white: 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
+      black: 'bg-gradient-to-t from-gray-800 to-black border border-black/5 text-white hover:from-gray-700 hover:to-gray-900',
     };
 
     const buttonStyle =
@@ -40,9 +41,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             boxShadow:
               'inset 0px 3px 6px rgba(255,255,255,0.5), 0px 2px 6px rgba(0,0,0,0.1)',
           }
-        : variant === 'white'
-          ? { boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }
-          : {};
+        : variant === 'black'
+          ? {
+              boxShadow:
+                'inset 0px 3px 6px rgba(255,255,255,0.1), 0px 2px 6px rgba(0,0,0,0.2)',
+            }
+          : variant === 'white'
+            ? { boxShadow: '0px 1px 2px rgba(0,0,0,0.05)' }
+            : {};
 
     return (
       <button

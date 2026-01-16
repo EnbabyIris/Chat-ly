@@ -178,7 +178,7 @@ export class TypingHandler {
           
           // Extract chatId from key
           const chatId = key.split(':')[1];
-          await this.handleStopTyping(socket, user.userId, chatId, key);
+          await this.handleStopTyping(socket, user, chatId, key);
         }
       }
 

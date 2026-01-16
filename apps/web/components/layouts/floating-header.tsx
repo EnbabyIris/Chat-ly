@@ -1,46 +1,82 @@
-import { GlobalSearch } from '../features/global-search';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Users } from 'lucide-react';
 import { UserProfile } from '../features/user-profile';
 import { NotificationBell } from '../features/notification-bell';
-import { useNotificationsManager } from '@/hooks/use-notifications';
-import type { ChatUser } from '@repo/shared';
+import { SearchUsersDialog } from '../features/search-users-dialog';
+import type { ChatUser, UserListItem } from '@repo/shared';
 
 interface FloatingHeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   currentUser: ChatUser;
-  onChatSelect?: (chatId: string) => void;
-  onTabChange?: (tab: 'chats' | 'users') => void;
+  onCreateGroup: () => void;
+  onUserSelect?: (user: UserListItem) => void;
 }
 
 export const FloatingHeader = ({
-  searchQuery,
-  onSearchChange,
   currentUser,
-  onChatSelect,
-  onTabChange,
+  onCreateGroup,
+  onUserSelect,
 }: FloatingHeaderProps) => {
-  // Use notification manager hook
-  const { handleNotificationClick } = useNotificationsManager({
-    currentUserId: currentUser._id,
-    onChatSelect,
-    onTabChange,
-  });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="absolute top-4 px-20 w-full z-10 flex items-center gap-4">
-      {/* Search Bar - takes up remaining space */}
-      <div className="flex-1 max-w-64">
-        <GlobalSearch
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-        />
+    <div className="absolute top-4 px-20 w-full z-10 flex items-center gap-3">
+      {/* Small Icons */}
+      <div className="flex items-center gap-2 ">
+        <motion.button
+          onClick={() => setIsSearchOpen(true)}
+          className="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center  overflow-hidden"
+          title="Search"
+          whileHover="hover"
+          initial="initial"
+        >
+          <Search className="w-4 h-4 flex-shrink-0" />
+          <motion.span
+            className=" text-sm font-medium whitespace-nowrap"
+            variants={{
+              initial: { marginLeft : 0, width: 0, opacity: 0 },
+              hover: { marginLeft : 8,  width: "auto", opacity: 1 }
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            Search
+          </motion.span>
+        </motion.button>
+
+        <motion.button
+          onClick={onCreateGroup}
+          className="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors flex items-center  overflow-hidden"
+          title="Create Group"
+          whileHover="hover"
+          initial="initial"
+        >
+          <Users className="w-4 h-4 flex-shrink-0" />
+          <motion.span
+            className=" text-sm font-medium whitespace-nowrap"
+            variants={{
+              initial: { marginLeft : 0, width: 0, opacity: 0 },
+              hover: { marginLeft : 8,  width: "auto", opacity: 1 }
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            Create Group
+          </motion.span>
+        </motion.button>
       </div>
 
       {/* Right side items */}
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center  ml-auto">
         <UserProfile user={currentUser} />
-        <NotificationBell onNotificationClick={handleNotificationClick} />
+        <NotificationBell />
       </div>
+
+      {/* Search Dialog */}
+      <SearchUsersDialog
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        currentUser={currentUser}
+        onUserSelect={(user) => onUserSelect?.(user)}
+      />
     </div>
   );
 };

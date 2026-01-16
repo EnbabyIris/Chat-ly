@@ -17,6 +17,16 @@ export { useUsers, useSearchUsers, useUser, useUpdateProfile } from './users.que
 // Chat queries
 export { useChats, useChat, useCreateChat, useUpdateChat, useDeleteChat } from './chats.queries';
 
+// Group queries
+export {
+  useCreateGroupChat,
+  useAddGroupParticipants,
+  useRemoveGroupParticipant,
+  useTransferGroupAdmin,
+  useArchiveGroupChat,
+  useDeleteGroupChat
+} from './groups.queries';
+
 // Message queries
 export { useMessages, useMessage, useSendMessage, useUpdateMessage, useDeleteMessage, useMarkMessageRead } from './messages.queries';
 export { useInfiniteMessages } from './messages-infinite.queries';

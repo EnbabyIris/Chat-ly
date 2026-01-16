@@ -9,6 +9,7 @@ import { ChatListItem } from '@/components/chat/chat-list-item';
 import { cn } from '@/lib/utils';
 import { TIMING } from '@/lib/constants/timing';
 import { SIZES } from '@/lib/constants/sizes';
+import type { ChatListItem as SharedChatListItem } from '@repo/shared';
 
 interface User {
   _id: string;
@@ -23,80 +24,116 @@ interface LatestMessage {
   };
 }
 
-interface Chat {
-  _id: string;
-  isGroupChat: boolean;
-  chatName?: string;
-  users: User[];
-  latestMessage?: LatestMessage;
-}
-
-const dummyChats: Chat[] = [
+const dummyChats: SharedChatListItem[] = [
   {
-    _id: 'dummy1',
+    id: 'dummy1',
+    name: null,
     isGroupChat: false,
-    users: [
+    avatar: null,
+    participants: [
       {
-        _id: 'user1',
+        id: 'user1',
         name: 'John Doe',
-        pic: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+        email: 'john@example.com',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+        isOnline: true,
+        lastSeen: null,
       },
       {
-        _id: 'user2',
+        id: 'user2',
         name: 'Jane Smith',
-        pic: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
+        email: 'jane@example.com',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
+        isOnline: false,
+        lastSeen: new Date(),
       },
     ],
     latestMessage: {
+      id: 'msg0',
       content: 'Hey, how are you doing?',
-      sender: { name: 'John Doe' },
+      senderId: 'user1',
+      senderName: 'John Doe',
+      messageType: 'text',
+      createdAt: new Date(),
     },
+    unreadCount: 1,
+    updatedAt: new Date(),
   },
   {
-    _id: 'dummy2',
+    id: 'dummy2',
+    name: 'Project Team',
     isGroupChat: true,
-    chatName: 'Project Team',
-    users: [
+    avatar: null,
+    participants: [
       {
-        _id: 'user1',
+        id: 'user1',
         name: 'Alice Johnson',
-        pic: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
+        email: 'alice@example.com',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
+        isOnline: true,
+        lastSeen: null,
       },
       {
-        _id: 'user3',
+        id: 'user3',
         name: 'Bob Wilson',
-        pic: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
+        email: 'bob@example.com',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
+        isOnline: false,
+        lastSeen: new Date(),
       },
       {
-        _id: 'user4',
+        id: 'user4',
         name: 'Carol Brown',
-        pic: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carol',
+        email: 'carol@example.com',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carol',
+        isOnline: true,
+        lastSeen: null,
       },
     ],
     latestMessage: {
+      id: 'msg1',
       content: 'Meeting at 3 PM today',
-      sender: { name: 'Alice Johnson' },
+      senderId: 'user1',
+      senderName: 'Alice Johnson',
+      messageType: 'text',
+      createdAt: new Date(),
     },
+    unreadCount: 2,
+    updatedAt: new Date(),
   },
   {
-    _id: 'dummy3',
+    id: 'dummy3',
+    name: null,
     isGroupChat: false,
-    users: [
+    avatar: null,
+    participants: [
       {
-        _id: 'user1',
+        id: 'user1',
         name: 'Mike Davis',
-        pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        email: 'mike@example.com',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        isOnline: false,
+        lastSeen: new Date(),
       },
       {
-        _id: 'user5',
+        id: 'user5',
         name: 'Sarah Connor',
-        pic: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+        email: 'sarah@example.com',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+        isOnline: true,
+        lastSeen: null,
       },
     ],
     latestMessage: {
+      id: 'msg2',
       content: 'Thanks for the help!',
-      sender: { name: 'Sarah Connor' },
+      senderId: 'user5',
+      senderName: 'Sarah Connor',
+      messageType: 'text',
+      createdAt: new Date(),
     },
+    unreadCount: 0,
+    updatedAt: new Date(),
   },
 ];
 
@@ -154,19 +191,19 @@ export const Step2ChatDemo = () => {
     <div ref={containerRef} className={containerClassName}>
       {dummyChats.map((chat, index) => (
         <div
-          key={chat._id}
+          key={chat.id}
           ref={(el) => {
             chatRefs.current[index] = el;
           }}
           className="relative"
         >
           <ChatListItem
-            chat={chat as unknown as import('@repo/shared').Chat}
+            chat={chat}
             loggedUser={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
             user={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
-            selectedChat={index === activeChatIndex ? (chat as unknown as import('@repo/shared').Chat) : null}
+            selectedChat={index === activeChatIndex ? chat : null}
             onlinepeople={dummyOnlinePeople}
-            setSelectedChat={handleSetSelectedChat as (chat: import('@repo/shared').Chat) => void}
+            setSelectedChat={handleSetSelectedChat as (chat: SharedChatListItem) => void}
           />
         </div>
       ))}

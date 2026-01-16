@@ -23,16 +23,19 @@ export const API_ENDPOINTS = {
     DELETE: (chatId: string) => `/chats/${chatId}`,
     MESSAGES: (chatId: string) => `/chats/${chatId}/messages`,
   },
+  GROUPS: {
+    CREATE: '/groups',
+    ADD_PARTICIPANTS: (chatId: string) => `/groups/${chatId}/participants`,
+    REMOVE_PARTICIPANT: (chatId: string, participantId: string) => `/groups/${chatId}/participants/${participantId}`,
+    TRANSFER_ADMIN: (chatId: string) => `/groups/${chatId}/admin`,
+    ARCHIVE: (chatId: string) => `/groups/${chatId}/archive`,
+    DELETE: (chatId: string) => `/groups/${chatId}`,
+  },
   MESSAGES: {
     SEND: '/messages',
     UPDATE: (messageId: string) => `/messages/${messageId}`,
     DELETE: (messageId: string) => `/messages/${messageId}`,
     READ: (messageId: string) => `/messages/${messageId}/read`,
-  },
-  NOTIFICATIONS: {
-    LIST: '/notifications',
-    MARK_READ: (notificationId: string) => `/notifications/${notificationId}/read`,
-    MARK_ALL_READ: '/notifications/read-all',
   },
 } as const;
 
@@ -56,10 +59,6 @@ export const SOCKET_EVENTS = {
   MESSAGE_READ: 'message:read',
   MESSAGE_READ_UPDATE: 'message:read:update',
 
-  // Notification Events
-  NOTIFICATION_NEW: 'notification:new',
-  NOTIFICATION_READ: 'notification:read',
-  NOTIFICATION_MARK_ALL_READ: 'notification:mark_all_read',
 
   // Typing Events
   MESSAGE_TYPING: 'message:typing',

@@ -20,7 +20,7 @@ export const ChatHeader = ({
   const isOnline = otherUser && (onlinePeople.includes(otherUser.id) || isUserOnline(otherUser.id));
 
   return (
-    <div className="bg-white/5 backdrop-blur-md border top-1 right-1  absolute  border-neutral-200 p-2 rounded-lg ">
+    <div className="bg-white/20 backdrop-blur-md border top-1 right-1 z-5  absolute  border-neutral-200 p-2 rounded-lg ">
       <div className="flex items-center">
         <div className="w-10 h-10 bg-linear-to-br from-neutral-200 to-neutral-300 rounded-full flex items-center justify-center mr-3">
           {selectedChat.isGroupChat ? (

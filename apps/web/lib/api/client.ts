@@ -13,7 +13,6 @@ import type {
   Message,
   SendMessageDTO,
   UpdateMessageDTO,
-  NotificationSummary,
   ApiResponse 
 } from '@repo/shared/types';
 
@@ -389,61 +388,6 @@ class ApiClient {
     throw new ClientApiError(500, 'Failed to fetch online users');
   }
 
-  // ================================
-  // Notification Management Methods
-  // ================================
-
-  /**
-   * Get notifications for current user
-   */
-  async getNotifications(filters?: { limit?: number; unreadOnly?: boolean }): Promise<NotificationSummary> {
-    const params = new URLSearchParams();
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.unreadOnly) params.append('unreadOnly', filters.unreadOnly.toString());
-
-    const queryString = params.toString();
-    const endpoint = `/api/v1${API_ENDPOINTS.NOTIFICATIONS.LIST}${queryString ? `?${queryString}` : ''}`;
-
-    const response = await this.request<NotificationSummary>(endpoint);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-
-    throw new ClientApiError(500, 'Failed to fetch notifications');
-  }
-
-  /**
-   * Mark a notification as read
-   */
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    const response = await this.request(
-      `/api/v1${API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)}`,
-      {
-        method: 'POST',
-      }
-    );
-
-    if (!response.success) {
-      throw new ClientApiError(500, 'Failed to mark notification as read');
-    }
-  }
-
-  /**
-   * Mark all notifications as read
-   */
-  async markAllNotificationsAsRead(): Promise<void> {
-    const response = await this.request(
-      `/api/v1${API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ}`,
-      {
-        method: 'POST',
-      }
-    );
-
-    if (!response.success) {
-      throw new ClientApiError(500, 'Failed to mark all notifications as read');
-    }
-  }
 
   // ================================
   // Chat Management Methods
@@ -548,7 +492,7 @@ class ApiClient {
 
     const queryString = params.toString();
     const endpoint = `/api/v1${API_ENDPOINTS.CHATS.MESSAGES(chatId)}${queryString ? `?${queryString}` : ''}`;
-    
+
     const response = await this.request<{ messages: Message[]; hasMore: boolean; nextCursor?: string }>(endpoint);
 
     if (response.success && response.data) {
@@ -556,6 +500,150 @@ class ApiClient {
     }
 
     throw new ClientApiError(500, 'Failed to fetch messages');
+  }
+
+  // ================================
+  // Group Management Methods
+  // ================================
+
+  /**
+   * Create a new group chat
+   */
+  async createGroupChat(data: import('@repo/shared/types').CreateGroupChatDTO): Promise<{ chat: import('@repo/shared/types').GroupChat; participants: import('@repo/shared/types').GroupParticipant[]; success: boolean }> {
+    const response = await this.request<{
+      chat: import('@repo/shared/types').GroupChat;
+      participants: import('@repo/shared/types').GroupParticipant[];
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.CREATE}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to create group chat');
+  }
+
+  /**
+   * Add participants to a group
+   */
+  async addGroupParticipants(chatId: string, participantIds: string[]): Promise<{ chatId: string; participantId: string; operation: 'added'; success: boolean }> {
+    const response = await this.request<{
+      chatId: string;
+      participantId: string;
+      operation: 'added';
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.ADD_PARTICIPANTS(chatId)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ participantIds }),
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to add participants');
+  }
+
+  /**
+   * Remove a participant from a group
+   */
+  async removeGroupParticipant(chatId: string, participantId: string): Promise<{ chatId: string; participantId: string; operation: 'removed'; success: boolean }> {
+    const response = await this.request<{
+      chatId: string;
+      participantId: string;
+      operation: 'removed';
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.REMOVE_PARTICIPANT(chatId, participantId)}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to remove participant');
+  }
+
+  /**
+   * Transfer admin role
+   */
+  async transferGroupAdmin(chatId: string, newAdminId: string): Promise<{ chatId: string; participantId: string; operation: 'admin_transferred'; newAdminId: string; success: boolean }> {
+    const response = await this.request<{
+      chatId: string;
+      participantId: string;
+      operation: 'admin_transferred';
+      newAdminId: string;
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.TRANSFER_ADMIN(chatId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({ newAdminId }),
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to transfer admin role');
+  }
+
+  /**
+   * Archive a group chat
+   */
+  async archiveGroupChat(chatId: string): Promise<{ chatId: string; operation: 'archived'; success: boolean }> {
+    const response = await this.request<{
+      chatId: string;
+      operation: 'archived';
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.ARCHIVE(chatId)}`,
+      {
+        method: 'PUT',
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to archive group chat');
+  }
+
+  /**
+   * Delete a group chat
+   */
+  async deleteGroupChat(chatId: string, hardDelete?: boolean): Promise<{ chatId: string; operation: 'deleted'; success: boolean }> {
+    const response = await this.request<{
+      chatId: string;
+      operation: 'deleted';
+      success: boolean;
+    }>(
+      `/api/v1${API_ENDPOINTS.GROUPS.DELETE(chatId)}`,
+      {
+        method: 'DELETE',
+        body: JSON.stringify({ hardDelete }),
+      }
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to delete group chat');
   }
 
   // ================================

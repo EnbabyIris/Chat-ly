@@ -5,10 +5,11 @@ import { MdLocationOn, MdMic } from "react-icons/md";
 import { useEffect } from "react";
 import useMessageInput from "../../hooks/useMessageInput";
 import MessageActionBar from "./message-action-bar";
+import type { ChatListItem, SendMessageDTO } from '@repo/shared';
 
 interface MessageInputProps {
-  selectedChat: any;
-  sendMessage: (message: string) => void;
+  selectedChat: ChatListItem | null;
+  sendMessage: (message: string, messageType?: SendMessageDTO['messageType'], locationData?: { latitude: number; longitude: number; address?: string }) => void;
   sendFile: (file: File) => void;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
@@ -20,12 +21,14 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
     aiMessage,
     isListening,
     isGettingLocation,
+    isUploading,
     inputRef,
     fileInputRef,
     typingHandler,
     onKeyDown,
     handleAISuggestionClick,
     handleFileUpload,
+    handleFileSelect,
     toggleListening,
     handleSendLocation,
     getTextarea,
@@ -69,15 +72,22 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
   );
 
   return (
-    <div className="px-2 py-1 bg-neutral-100 border-t border-gray-200">
+    <div className="px-2 py-1 relative bg-neutral-100 border-t border border-gray-200">
+       <div
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent, transparent , transparent ,red)',
+      }}
+       className="absolute  top-0 z-5 -translate-y-[100.5%]  left-0 w-full h-full  bg-neutral-100" />
       <div
-        className="flex flex-col border-gray-200 items-stretch mb-1 relative border rounded-lg overflow-hidden mt-1"
+        className="flex flex-col shadow-[0_0px_3px_0_rgba(0,0,0,0.1)] border-gray-200 items-stretch mb-1 relative border rounded-lg overflow-hidden mt-1"
       >
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*,audio/*,application/pdf"
           className="hidden"
+          onChange={handleFileSelect}
+          disabled={isUploading}
         />
 
         {/* React Chat Elements Input */}

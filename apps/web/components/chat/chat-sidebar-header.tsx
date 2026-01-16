@@ -11,8 +11,10 @@ export const ChatSidebarHeader = ({
   activeTab,
   onTabChange,
 }: ChatSidebarHeaderProps) => {
+
   return (
     <div className="p-4 border-b border-neutral-200">
+
       {/* Tabs */}
       <div className="flex space-x-1 border border-gray-200 bg-neutral-100 rounded-lg p-1">
         <button

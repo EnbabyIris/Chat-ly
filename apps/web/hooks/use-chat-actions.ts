@@ -12,8 +12,8 @@ interface UseChatActionsParams {
 }
 
 interface UseChatActionsReturn {
-  handleSendMessage: (message: string, chatId?: string) => void;
-  handleSendFile: (file: File) => void;
+  handleSendMessage: (message: string, chatId?: string, messageType?: 'text' | 'image' | 'file' | 'location', locationData?: { latitude: number; longitude: number; address?: string }) => void;
+  handleSendFile: (file: File | string) => void;
   handleStartChat: (user: UserListItem) => void;
   isCreatingChat: boolean;
 }
@@ -27,7 +27,7 @@ export const useChatActions = ({
   const createChatMutation = useCreateChat();
   const { socket, isConnected } = useSocket();
 
-  const handleSendMessage = useCallback((message: string, chatId?: string) => {
+  const handleSendMessage = useCallback((message: string, chatId?: string, messageType: 'text' | 'image' | 'file' | 'location' = 'text', locationData?: { latitude: number; longitude: number; address?: string }) => {
     if (!message.trim()) return;
 
     const targetChatId = chatId;
@@ -38,25 +38,39 @@ export const useChatActions = ({
 
     // Send via Socket.IO only (saves to DB and broadcasts to all participants)
     if (socket && isConnected) {
-      socket.emit(SOCKET_EVENTS.MESSAGE_SEND, {
+      const messageData: any = {
         chatId: targetChatId,
         content: message.trim(),
-        messageType: 'text',
-      });
-      console.log('📤 Message sent via Socket.IO');
+        messageType: messageType,
+      };
+
+      // Add location data if provided
+      if (locationData) {
+        messageData.latitude = locationData.latitude;
+        messageData.longitude = locationData.longitude;
+        messageData.locationAddress = locationData.address;
+      }
+
+      socket.emit(SOCKET_EVENTS.MESSAGE_SEND, messageData);
+      console.log(`📤 ${messageType} message sent via Socket.IO`);
     } else {
       console.error('❌ Socket not connected - cannot send message');
       // TODO: Show error notification to user
     }
   }, [socket, isConnected]);
 
-  const handleSendFile = useCallback((file: File) => {
-    // TODO: Implement file upload and sending
-    console.log('Sending file:', file.name);
-    // This would involve:
-    // 1. Upload file to storage (Cloudinary, S3, etc.)
-    // 2. Get file URL
-    // 3. Send message with attachment URL
+  const handleSendFile = useCallback((file: File | string) => {
+    // Handle both File objects and Cloudinary URLs
+    if (typeof file === 'string') {
+      // Cloudinary URL - this is handled by the updated sendMessage flow
+      console.log('Cloudinary URL received:', file);
+      // The URL will be sent via sendMessage with appropriate messageType
+    } else {
+      // Traditional file upload - fallback for non-image files
+      console.log('Sending file:', file.name);
+      // TODO: Implement traditional file upload for non-Cloudinary files
+      // This could upload to backend storage or another service
+    }
   }, []);
 
   const handleStartChat = useCallback((user: UserListItem) => {

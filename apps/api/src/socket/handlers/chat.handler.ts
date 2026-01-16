@@ -1,18 +1,16 @@
-import type { Server, Socket } from 'socket.io';
+import type { Socket } from 'socket.io';
 import { ChatService } from '../../services/chat.service';
-import { UserService } from '../../services/user.service';
 import { getSocketUser } from '../auth.middleware';
 import type { ChatRoom } from '../types';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
 
 const chatService = new ChatService();
-const userService = new UserService();
 
 export class ChatHandler {
   private chatRooms = new Map<string, ChatRoom>();
 
-  constructor(private io: Server) {
-    // Initialize chat handler with Socket.IO server
+  constructor(_io: any) {
+    // Initialize chat handler
   }
 
   /**

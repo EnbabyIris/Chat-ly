@@ -35,8 +35,12 @@ export interface SocketEvents {
 export interface SendMessageData {
   chatId: string;
   content: string;
-  messageType?: 'text' | 'image' | 'file';
+  messageType?: 'text' | 'image' | 'file' | 'location';
   attachmentUrl?: string;
+  // Location-specific fields
+  latitude?: number;
+  longitude?: number;
+  locationAddress?: string;
   replyToId?: string;
 }
 
@@ -52,8 +56,12 @@ export interface MessageData {
     avatar?: string;
   };
   content: string;
-  messageType: 'text' | 'image' | 'file' | 'system';
+  messageType: 'text' | 'image' | 'file' | 'location' | 'system';
   attachmentUrl?: string;
+  // Location-specific fields
+  latitude?: number;
+  longitude?: number;
+  locationAddress?: string;
   replyToId?: string;
   isEdited: boolean;
   createdAt: Date;

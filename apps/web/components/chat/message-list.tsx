@@ -30,10 +30,11 @@ export const MessageList = ({ messages, currentUser }: MessageListProps) => {
   }, [messages.length]);
 
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
-      className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50"
+      className="flex-1 overflow-y-auto p-6 space-y-5 bg-neutral-100 scrollbar-none "
     >
+     
       {messages.map((message) => (
         <MessageBubble
           key={message.id}

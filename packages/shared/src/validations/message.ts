@@ -8,7 +8,7 @@ export const sendMessageSchema = z.object({
       .min(1, 'Message cannot be empty')
       .max(5000, 'Message must be less than 5000 characters')
       .trim(),
-    messageType: z.enum(['text', 'image', 'file', 'system'])
+    messageType: z.enum(['text', 'image', 'file', 'location', 'system'])
       .optional()
       .default('text'),
     attachmentUrl: z.string()
@@ -27,14 +27,32 @@ export const sendMessageSchema = z.object({
       .uuid('Invalid reply message ID format')
       .optional()
       .nullable(),
+    latitude: z.number()
+      .min(-90, 'Latitude must be between -90 and 90')
+      .max(90, 'Latitude must be between -90 and 90')
+      .optional(),
+    longitude: z.number()
+      .min(-180, 'Longitude must be between -180 and 180')
+      .max(180, 'Longitude must be between -180 and 180')
+      .optional(),
+    locationAddress: z.string()
+      .max(500, 'Location address must be less than 500 characters')
+      .optional()
+      .nullable(),
   }).refine((data) => {
     // If messageType is image or file, attachmentUrl is required
     if ((data.messageType === 'image' || data.messageType === 'file') && !data.attachmentUrl) {
       return false;
     }
+    // If messageType is location, latitude and longitude are required
+    if (data.messageType === 'location') {
+      if (!data.latitude || !data.longitude) {
+        return false;
+      }
+    }
     return true;
   }, {
-    message: 'Attachment URL is required for image and file messages',
+    message: 'Attachment URL is required for image and file messages, latitude and longitude are required for location messages',
     path: ['attachmentUrl'],
   }),
 });

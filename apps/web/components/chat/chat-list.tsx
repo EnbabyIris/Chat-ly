@@ -33,7 +33,7 @@ export const ChatList = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative z-10">
       {safeChats.map((chat) => (
         <ChatListItem
           key={chat.id}

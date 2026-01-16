@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean, index, decimal } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -68,6 +68,10 @@ export const messages = pgTable('messages', {
   attachmentUrl: text('attachment_url'), // for file/image messages
   attachmentName: varchar('attachment_name', { length: 255 }), // original file name
   attachmentSize: varchar('attachment_size', { length: 50 }), // file size in bytes
+  // Location-specific fields for location messages
+  latitude: decimal('latitude', { precision: 10, scale: 8 }), // GPS latitude (-90 to 90)
+  longitude: decimal('longitude', { precision: 11, scale: 8 }), // GPS longitude (-180 to 180)
+  locationAddress: text('location_address'), // Human-readable address for location messages
   isEdited: boolean('is_edited').default(false).notNull(),
   isDeleted: boolean('is_deleted').default(false).notNull(),
   editedAt: timestamp('edited_at'), // when message was last edited
@@ -81,6 +85,8 @@ export const messages = pgTable('messages', {
   typeIdx: index('messages_type_idx').on(table.messageType),
   deletedIdx: index('messages_deleted_idx').on(table.isDeleted),
   replyIdx: index('messages_reply_idx').on(table.replyToId),
+  // Location indexes for location-based queries
+  locationIdx: index('messages_location_idx').on(table.latitude, table.longitude),
 }));
 
 // Add foreign key reference for replyToId after table definition
@@ -121,6 +127,7 @@ export const refreshTokens = pgTable('refresh_tokens', {
   expiresAtIdx: index('refresh_tokens_expires_at_idx').on(table.expiresAt),
   revokedIdx: index('refresh_tokens_revoked_idx').on(table.isRevoked),
 }));
+
 
 // ================================
 // RELATIONS DEFINITIONS

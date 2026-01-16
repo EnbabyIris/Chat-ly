@@ -28,13 +28,13 @@ export const ChatSidebar = ({
   onUserSelect,
 }: ChatSidebarProps) => {
   return (
-    <div className="w-80 bg-white border-r border-neutral-200 flex flex-col shadow-sm">
+    <div className="w-80 bg-white border-r border-neutral-200 flex flex-col shadow-sm relative z-0">
       <ChatSidebarHeader
         activeTab={activeTab}
         onTabChange={onTabChange}
       />
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-none z-10 relative">
         {activeTab === 'chats' ? (
           <ChatList
             chats={filteredChats}

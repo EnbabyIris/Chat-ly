@@ -11,7 +11,7 @@ interface ChatAreaProps {
   messages?: Message[]; // Made optional since we fetch our own
   currentUser: ChatUser;
   onlinePeople: string[];
-  onSendMessage: (message: string, chatId?: string) => void;
+  onSendMessage: (message: string, chatId?: string, messageType?: 'text' | 'image' | 'file' | 'location', locationData?: { latitude: number; longitude: number; address?: string }) => void;
   onSendFile: (file: File) => void;
 }
 
@@ -23,16 +23,20 @@ export const ChatArea = ({
   onSendMessage,
   onSendFile,
 }: ChatAreaProps) => {
-  // Fetch messages for the selected chat
-  const { data: messagesData, isLoading: messagesLoading } = useMessages(selectedChat?.id);
+  // Fetch messages for the selected chat (only if chat is selected)
+  const { data: messagesData, isLoading: messagesLoading } = useMessages(
+    selectedChat?.id || '',
+    undefined,
+    { enabled: !!selectedChat?.id }
+  );
 
   // Use fetched messages or empty array if loading/no chat selected
   const messages = messagesData?.messages || [];
 
   // Handle message sending with chat ID
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = (message: string, messageType?: 'text' | 'image' | 'file' | 'location', locationData?: { latitude: number; longitude: number; address?: string }) => {
     if (selectedChat?.id) {
-      onSendMessage(message, selectedChat.id);
+      onSendMessage(message, selectedChat.id, messageType, locationData);
     }
   };
   if (!selectedChat) {

@@ -4,6 +4,7 @@ import { userRoutes } from './user.routes';
 import { chatRoutes } from './chat.routes';
 import { messageRoutes } from './message.routes';
 import { chatMessagesRoutes } from './chat-messages.routes';
+import { groupRoutes } from './group.routes';
 import { errorHandler, notFoundHandler } from '../middleware/error-handler';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use(`${API_VERSION}/auth`, authRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/chats`, chatRoutes);
 router.use(`${API_VERSION}/chats`, chatMessagesRoutes); // Nested route: /chats/:chatId/messages
+router.use(`${API_VERSION}/groups`, groupRoutes);
 router.use(`${API_VERSION}/messages`, messageRoutes);
 
 // API documentation endpoint
@@ -55,6 +57,14 @@ router.get(`${API_VERSION}`, (_req, res) => {
         'PUT /chats/:chatId': 'Update chat',
         'DELETE /chats/:chatId': 'Delete chat',
         'GET /chats/:chatId/messages': 'Get chat messages'
+      },
+      groups: {
+        'POST /groups': 'Create new group chat',
+        'POST /groups/:chatId/participants': 'Add participants to group',
+        'DELETE /groups/:chatId/participants/:participantId': 'Remove participant from group',
+        'PUT /groups/:chatId/admin': 'Transfer admin role',
+        'PUT /groups/:chatId/archive': 'Archive group chat',
+        'DELETE /groups/:chatId': 'Delete group chat'
       },
       messages: {
         'POST /messages': 'Send new message',

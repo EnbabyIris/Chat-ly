@@ -90,8 +90,6 @@ export interface SocketEvents {
     chatId: string;
     userId: string;
   }) => void;
-  'notification:new': (notification: any) => void;
-  'notification:updated': (notification: any) => void;
   'error': (error: {
     message: string;
     code?: string;

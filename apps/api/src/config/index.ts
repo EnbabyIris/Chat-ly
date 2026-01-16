@@ -1,7 +1,37 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config();
+/**
+ * Get directory name in ES modules (equivalent to __dirname)
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/**
+ * Load environment variables from .env file
+ * Checks multiple locations to support different execution contexts:
+ * - apps/api/.env (when running from apps/api directory)
+ * - repo root .env (when running from monorepo root)
+ */
+const envPaths = [
+  path.resolve(process.cwd(), '.env'), // Current working directory
+  path.resolve(__dirname, '..', '..', '.env'), // apps/api/.env (relative to compiled dist/config/index.js)
+  path.resolve(process.cwd(), '..', '..', '.env'), // Root .env (from apps/api)
+];
+
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    const result = dotenv.config({ path: envPath });
+    if (result.error) {
+      console.error(`❌ Error loading .env from ${envPath}:`, result.error);
+      continue;
+    }
+    console.log(`✅ Loaded environment variables from: ${envPath}`);
+    break;
+  }
+}
 
 /**
  * Server configuration with environment variable validation

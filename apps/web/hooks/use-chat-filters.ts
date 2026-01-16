@@ -21,10 +21,10 @@ export const useChatFilters = ({
 }: UseChatFiltersParams): UseChatFiltersReturn => {
   const filteredChats = useMemo(() => {
     if (!searchQuery) return chats;
-    
+
     return chats.filter(chat => {
-      const otherUser = chat.users.find(u => u._id !== currentUser._id);
-      const searchName = chat.isGroupChat ? chat.chatName : otherUser?.name;
+      const otherUser = chat.participants.find(u => u.id !== currentUser._id);
+      const searchName = chat.isGroupChat ? chat.name : otherUser?.name;
       return searchName?.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [chats, searchQuery, currentUser._id]);

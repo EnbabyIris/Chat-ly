@@ -58,8 +58,12 @@ export class MessageHandler {
           avatar: user.userAvatar || undefined,
         },
         content: data.content.trim(),
-        messageType: data.messageType as 'text' | 'image' | 'file' | 'system' || 'text',
+        messageType: data.messageType as 'text' | 'image' | 'file' | 'location' | 'system' || 'text',
         attachmentUrl: data.attachmentUrl || undefined,
+        // Location-specific fields
+        latitude: data.latitude || undefined,
+        longitude: data.longitude || undefined,
+        locationAddress: data.locationAddress || undefined,
         replyToId: data.replyToId || undefined,
         isEdited: false,
         createdAt: new Date(),
@@ -80,6 +84,10 @@ export class MessageHandler {
         content: data.content.trim(),
         messageType: data.messageType || 'text',
         attachmentUrl: data.attachmentUrl,
+        // Location-specific fields
+        latitude: data.latitude,
+        longitude: data.longitude,
+        locationAddress: data.locationAddress,
         replyToId: data.replyToId,
       }).then((savedMessage) => {
         // Send update with real DB ID (optional - for perfect consistency)
@@ -95,8 +103,12 @@ export class MessageHandler {
             avatar: savedMessage.sender?.avatar || user.userAvatar || undefined,
           },
           content: savedMessage.content,
-          messageType: savedMessage.messageType as 'text' | 'image' | 'file' | 'system',
+          messageType: savedMessage.messageType as 'text' | 'image' | 'file' | 'location' | 'system',
           attachmentUrl: savedMessage.attachmentUrl || undefined,
+          // Location-specific fields
+          latitude: savedMessage.latitude ? parseFloat(savedMessage.latitude as string) : undefined,
+          longitude: savedMessage.longitude ? parseFloat(savedMessage.longitude as string) : undefined,
+          locationAddress: savedMessage.locationAddress || undefined,
           replyToId: savedMessage.replyToId || undefined,
           isEdited: savedMessage.isEdited,
           createdAt: savedMessage.createdAt,

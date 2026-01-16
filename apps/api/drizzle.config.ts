@@ -1,15 +1,31 @@
-//@ts-nocheck
-import { defineConfig } from 'drizzle-kit';
+import fs from 'node:fs';
+import path from 'node:path';
 import dotenv from 'dotenv';
+import { defineConfig } from 'drizzle-kit';
 
-dotenv.config();
+/**
+ * Load env from either:
+ * - apps/api/.env (when running inside apps/api)
+ * - repo root .env (common monorepo setup)
+ */
+const envPaths = [path.resolve(process.cwd(), '.env'), path.resolve(process.cwd(), '..', '..', '.env')];
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+    break;
+  }
+}
 
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle/migrations',
-  dialect: 'postgresql',
+  /**
+   * drizzle-kit v0.20.x expects `driver`, not `dialect`.
+   * Using `dialect` makes the config effectively ignored and causes CLI validation errors.
+   */
+  driver: 'pg',
   dbCredentials: {
-    connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/chat_turbo_dev',
+    connectionString: process.env.DATABASE_URL!,
   },
   verbose: true,
   strict: true,
