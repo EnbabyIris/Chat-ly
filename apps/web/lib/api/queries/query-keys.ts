@@ -47,4 +47,15 @@ export const queryKeys = {
     details: () => [...queryKeys.messages.all, 'detail'] as const,
     detail: (messageId: string) => [...queryKeys.messages.details(), messageId] as const,
   },
+
+  // Notification queries
+  notifications: {
+    all: ['notifications'] as const,
+    lists: () => [...queryKeys.notifications.all, 'list'] as const,
+    list: (filters?: { limit?: number; unreadOnly?: boolean }) =>
+      [...queryKeys.notifications.lists(), filters] as const,
+    unreadCount: () => [...queryKeys.notifications.all, 'unreadCount'] as const,
+    details: () => [...queryKeys.notifications.all, 'detail'] as const,
+    detail: (notificationId: string) => [...queryKeys.notifications.details(), notificationId] as const,
+  },
 } as const;

@@ -4,6 +4,8 @@ import type { Socket } from 'socket.io';
 export interface AuthenticatedSocket extends Socket {
   userId?: string;
   email?: string;
+  userName?: string;
+  userAvatar?: string | null;
 }
 
 // Socket event types
@@ -44,6 +46,11 @@ export interface MessageData {
   senderId: string;
   senderName: string;
   senderAvatar?: string;
+  sender?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
   content: string;
   messageType: 'text' | 'image' | 'file' | 'system';
   attachmentUrl?: string;

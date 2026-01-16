@@ -60,9 +60,9 @@ export class TypingHandler {
       const typingKey = `${user.userId}:${data.chatId}`;
       
       if (data.isTyping) {
-        await this.handleStartTyping(socket, user.userId, data.chatId, typingKey);
+        await this.handleStartTyping(socket, user, data.chatId, typingKey);
       } else {
-        await this.handleStopTyping(socket, user.userId, data.chatId, typingKey);
+        await this.handleStopTyping(socket, user, data.chatId, typingKey);
       }
     } catch (error) {
       console.error('Error handling typing:', error);
@@ -78,7 +78,7 @@ export class TypingHandler {
    */
   private async handleStartTyping(
     socket: Socket,
-    userId: string,
+    user: { userId: string; email: string; userName: string; userAvatar: string | null; },
     chatId: string,
     typingKey: string,
   ): Promise<void> {
@@ -91,18 +91,18 @@ export class TypingHandler {
     if (!this.typingUsers.has(chatId)) {
       this.typingUsers.set(chatId, new Set());
     }
-    
-    const wasTyping = this.typingUsers.get(chatId)!.has(userId);
-    this.typingUsers.get(chatId)!.add(userId);
+
+    const wasTyping = this.typingUsers.get(chatId)!.has(user.userId);
+    this.typingUsers.get(chatId)!.add(user.userId);
 
     // Only broadcast if user wasn't already typing
     if (!wasTyping) {
-      const userDetails = await userService.getUserById(userId);
+      // Use cached user info from socket (no DB call needed!)
       
       const typingData: TypingUpdateData = {
         chatId,
-        userId,
-        userName: userDetails.name,
+        userId: user.userId,
+        userName: user.userName,
         isTyping: true,
         timestamp: new Date()
       };
@@ -113,12 +113,12 @@ export class TypingHandler {
 
     // Set timeout to auto-stop typing after 3 seconds of inactivity
     const timeout = setTimeout(() => {
-      this.handleStopTyping(socket, userId, chatId, typingKey);
+      this.handleStopTyping(socket, user, chatId, typingKey);
     }, 3000);
     
     this.typingTimeouts.set(typingKey, timeout);
 
-    console.log(`✍️ User ${userId} started typing in chat ${chatId}`);
+    console.log(`✍️ User ${user.userName} started typing in chat ${chatId}`);
   }
 
   /**
@@ -126,7 +126,7 @@ export class TypingHandler {
    */
   private async handleStopTyping(
     socket: Socket,
-    userId: string,
+    user: { userId: string; email: string; userName: string; userAvatar: string | null; },
     chatId: string,
     typingKey: string,
   ): Promise<void> {
@@ -138,27 +138,25 @@ export class TypingHandler {
 
     // Remove user from typing users
     const chatTypingUsers = this.typingUsers.get(chatId);
-    if (chatTypingUsers && chatTypingUsers.has(userId)) {
-      chatTypingUsers.delete(userId);
+    if (chatTypingUsers && chatTypingUsers.has(user.userId)) {
+      chatTypingUsers.delete(user.userId);
       
       // Clean up empty sets
       if (chatTypingUsers.size === 0) {
         this.typingUsers.delete(chatId);
       }
 
-      // Broadcast stop typing
-      const userDetails = await userService.getUserById(userId);
-      
+      // Broadcast stop typing (use cached user info - no DB call needed!)
       const typingData: TypingUpdateData = {
         chatId,
-        userId,
-        userName: userDetails.name,
+        userId: user.userId,
+        userName: user.userName,
         isTyping: false,
         timestamp: new Date()
       };
 
       socket.to(`chat:${chatId}`).emit(SOCKET_EVENTS.MESSAGE_TYPING_UPDATE, typingData);
-      console.log(`✋ User ${userId} stopped typing in chat ${chatId}`);
+      console.log(`✋ User ${user.userName} stopped typing in chat ${chatId}`);
     }
   }
 

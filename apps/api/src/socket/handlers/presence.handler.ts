@@ -29,8 +29,7 @@ export class PresenceHandler {
     if (!user) return;
 
     try {
-      // Get user details
-      const userDetails = await userService.getUserById(user.userId);
+      // Use cached user info from socket (no DB call needed!)
       
       // Track socket for this user
       if (!this.userSockets.has(user.userId)) {
@@ -42,7 +41,7 @@ export class PresenceHandler {
       this.onlineUsers.set(user.userId, {
         userId: user.userId,
         socketId: socket.id,
-        userName: userDetails.name,
+        userName: user.userName,
         joinedAt: new Date()
       });
 
@@ -57,7 +56,15 @@ export class PresenceHandler {
 
       this.io.emit(SOCKET_EVENTS.USER_STATUS, statusData);
 
-      console.log(`🟢 User ${userDetails.name} came online`);
+      // Send current online users list to the newly connected user
+      const currentOnlineUsers = Array.from(this.onlineUsers.values()).map(onlineUser => ({
+        userId: onlineUser.userId,
+        isOnline: true
+      }));
+
+      socket.emit('online_users_init', { onlineUsers: currentOnlineUsers });
+
+      console.log(`🟢 User ${user.userName} came online`);
     } catch (error) {
       console.error('Error handling user connection:', error);
     }

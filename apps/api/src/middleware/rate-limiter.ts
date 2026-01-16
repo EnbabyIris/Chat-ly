@@ -16,6 +16,11 @@ export const rateLimiter = (options: {
   const { windowMs, maxRequests } = options;
 
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Skip rate limiting in development
+    if (process.env.NODE_ENV === 'development') {
+      next();
+      return;
+    }
     const key = req.ip || req.socket.remoteAddress || 'unknown';
     const now = Date.now();
 

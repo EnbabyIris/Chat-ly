@@ -7,6 +7,8 @@ import { apiClient, tokenStorage, ClientApiError } from '@/lib/api/client';
 import { useCurrentUser } from '@/lib/api/queries';
 import { queryKeys } from '@/lib/api/queries';
 import type { User, RegisterDTO, LoginDTO } from '@repo/shared/types';
+import { socketClient } from '@/lib/socket/client';
+
 
 // Auth context types
 interface AuthState {
@@ -97,13 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       clearError();
 
-      const authResponse = await apiClient.login(credentials);
+      await apiClient.login(credentials);
       
       await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser() });
       await queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
       await queryClient.invalidateQueries({ queryKey: queryKeys.chats.all });
       
       // Redirect to chats page
+      setLoading(false);
       router.push('/chats');
     } catch (error) {
       console.error('Login failed:', error);
@@ -212,6 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(async () => {
       try {
         await apiClient.refreshToken();
+        socketClient.reconnectWithNewToken();
       } catch (error) {
         console.error('Automatic token refresh failed:', error);
         // Don't logout on automatic refresh failure

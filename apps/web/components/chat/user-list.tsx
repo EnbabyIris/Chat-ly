@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import { UserListItem } from '@/components/chat/user-list-item';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import type { UserListItem as UserType } from '@repo/shared';
 
 interface UserListProps {
@@ -8,6 +9,7 @@ interface UserListProps {
 }
 
 export const UserList = ({ users, onUserSelect }: UserListProps) => {
+  const { onlineUsers } = useOnlineStatus();
   if (users.length === 0) {
     return (
       <div className="text-center text-neutral-500 mt-12">
@@ -27,6 +29,7 @@ export const UserList = ({ users, onUserSelect }: UserListProps) => {
           key={user.id}
           user={user}
           handleFunction={() => onUserSelect(user)}
+          isOnline={onlineUsers.has(user.id)}
         />
       ))}
     </div>

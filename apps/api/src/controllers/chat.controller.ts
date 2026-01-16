@@ -58,7 +58,7 @@ export class ChatController {
 
     const chats = await chatService.getUserChats(req.user.userId);
 
-    return successResponse(res, { chats }, 'Chats retrieved successfully');
+    return successResponse(res, chats, 'Chats retrieved successfully');
   }
 
   /**

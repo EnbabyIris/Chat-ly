@@ -24,6 +24,7 @@ export function useUsers(
   return useQuery({
     queryKey: queryKeys.users.list(filters),
     queryFn: async () => {
+      // For now, get all users. The real-time online status comes from useOnlineStatus hook
       return await apiClient.getAllUsers(filters);
     },
     staleTime: 3 * 60 * 1000, // 3 minutes - user lists don't change frequently

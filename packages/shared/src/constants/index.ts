@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     PROFILE: (userId: string) => `/users/${userId}`,
     UPDATE_PROFILE: '/users/profile',
     ALL: '/users',
+    ONLINE: '/users/online',
   },
   CHATS: {
     LIST: '/chats',
@@ -27,6 +28,11 @@ export const API_ENDPOINTS = {
     UPDATE: (messageId: string) => `/messages/${messageId}`,
     DELETE: (messageId: string) => `/messages/${messageId}`,
     READ: (messageId: string) => `/messages/${messageId}/read`,
+  },
+  NOTIFICATIONS: {
+    LIST: '/notifications',
+    MARK_READ: (notificationId: string) => `/notifications/${notificationId}/read`,
+    MARK_ALL_READ: '/notifications/read-all',
   },
 } as const;
 
@@ -49,7 +55,12 @@ export const SOCKET_EVENTS = {
   MESSAGE_DELETED: 'message:deleted',
   MESSAGE_READ: 'message:read',
   MESSAGE_READ_UPDATE: 'message:read:update',
-  
+
+  // Notification Events
+  NOTIFICATION_NEW: 'notification:new',
+  NOTIFICATION_READ: 'notification:read',
+  NOTIFICATION_MARK_ALL_READ: 'notification:mark_all_read',
+
   // Typing Events
   MESSAGE_TYPING: 'message:typing',
   MESSAGE_TYPING_UPDATE: 'message:typing:update',

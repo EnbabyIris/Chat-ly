@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { queryKeys } from '@/lib/api/queries';
 import { apiClient } from '@/lib/api/client';
 import type { ChatListItem as ChatType, ChatUser } from '@repo/shared';
+import { motion } from 'framer-motion';
 
 interface ChatListItemProps {
   chat: ChatType;
@@ -35,44 +36,36 @@ export const ChatListItem = memo(({
       staleTime: 30 * 1000, // 30 seconds
     });
   };
-  // Handle both new structure (participants) and old structure (users)
-  const participants = 'participants' in chat ? chat.participants : [];
-  const users = 'users' in chat ? (chat as { users: Array<{ _id: string; name: string; pic?: string }> }).users : participants.map(p => p.user).filter(Boolean) as Array<{ id?: string; _id?: string; name: string; pic?: string; avatar?: string | null }>;
-  
+  // Find the other user in the chat (not the logged-in user)
   const otherUser = useMemo(() => {
-    if (users.length === 0) return null;
-    const firstUser = users[0];
-    if (!firstUser) return null;
+    if (!chat.participants || chat.participants.length === 0) return null;
     
-    if ('id' in firstUser && firstUser.id) {
-      // New structure with UserListItem
-      return users.find((u) => 'id' in u && u.id && u.id !== loggedUser._id) || users[0];
-    } else if ('_id' in firstUser && firstUser._id) {
-      // Old structure with _id
-      return users.find((u) => '_id' in u && u._id && u._id !== loggedUser._id) || users[0];
+    // For 1:1 chats, find the user that's not the logged-in user
+    if (!chat.isGroupChat) {
+      return chat.participants.find(participant => participant.id !== loggedUser._id) || chat.participants[0];
     }
-    return users[0];
-  }, [users, loggedUser._id]);
+    
+    // For group chats, return the first participant for now
+    return chat.participants[0];
+  }, [chat.participants, chat.isGroupChat, loggedUser._id]);
 
-  const userId = otherUser ? ('id' in otherUser ? otherUser.id : ('_id' in otherUser ? otherUser._id : undefined)) : undefined;
-  const userName = otherUser ? ('name' in otherUser ? otherUser.name : 'Unknown') : 'Unknown';
-  const userPic = otherUser ? ('pic' in otherUser ? otherUser.pic : ('avatar' in otherUser ? otherUser.avatar : undefined)) : undefined;
+  const userId = otherUser?.id;
+  const userName = otherUser?.name || 'User';
+  const userPic = otherUser?.avatar;
 
   const isOnline = useMemo(
     () => userId ? onlinepeople.includes(userId) : false,
     [onlinepeople, userId]
   );
 
-  const chatId = 'id' in chat ? chat.id : chat._id;
   const isSelected = useMemo(
-    () => selectedChat && (('id' in selectedChat ? selectedChat.id : selectedChat._id) === chatId),
-    [selectedChat, chatId]
+    () => selectedChat?.id === chat.id,
+    [selectedChat, chat.id]
   );
 
-  const chatName = 'name' in chat ? chat.name : ('chatName' in chat ? (chat as { chatName?: string }).chatName : null);
   const displayName = useMemo(
-    () => (chat.isGroupChat ? (chatName || 'Group Chat') : (userName || 'Unknown')),
-    [chat.isGroupChat, chatName, userName]
+    () => (chat.isGroupChat ? (chat.name || 'Group Chat') : userName),
+    [chat.isGroupChat, chat.name, userName]
   );
 
   const displayPic = useMemo(
@@ -86,7 +79,8 @@ export const ChatListItem = memo(({
   const handleClick = useMemo(() => () => setSelectedChat(chat), [chat, setSelectedChat]);
 
   return (
-    <div
+    <motion.div
+    layout="position"
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       className={cn(
@@ -131,17 +125,15 @@ export const ChatListItem = memo(({
           </p>
           {chat.latestMessage && (
             <p className="text-xs text-neutral-400 truncate">
-              {'senderName' in chat.latestMessage 
+              {chat.latestMessage.senderName 
                 ? `${chat.latestMessage.senderName}: ${chat.latestMessage.content}`
-                : ('sender' in chat.latestMessage && chat.latestMessage.sender
-                  ? `${chat.latestMessage.sender.name}: ${chat.latestMessage.content}`
-                  : chat.latestMessage.content)
+                : chat.latestMessage.content
               }
             </p>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 });
 

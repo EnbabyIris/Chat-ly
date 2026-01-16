@@ -37,10 +37,12 @@ export const socketAuthMiddleware = async (
       return next(new Error('User not found or inactive'));
     }
 
-    // Attach user info to socket
+    // Attach complete user info to socket (avoid future DB calls)
     const authSocket = socket as AuthenticatedSocket;
     authSocket.userId = user.id;
     authSocket.email = user.email;
+    authSocket.userName = user.name;
+    authSocket.userAvatar = user.avatar;
 
     // Update user online status
     await userService.updateUserStatus(user.id, true);
@@ -57,15 +59,22 @@ export const socketAuthMiddleware = async (
 /**
  * Helper to get authenticated user info from socket
  */
-export const getSocketUser = (socket: Socket): { userId: string; email: string } | null => {
+export const getSocketUser = (socket: Socket): { 
+  userId: string; 
+  email: string; 
+  userName: string; 
+  userAvatar: string | null; 
+} | null => {
   const authSocket = socket as AuthenticatedSocket;
   
-  if (!authSocket.userId || !authSocket.email) {
+  if (!authSocket.userId || !authSocket.email || !authSocket.userName) {
     return null;
   }
 
   return {
     userId: authSocket.userId,
     email: authSocket.email,
+    userName: authSocket.userName,
+    userAvatar: authSocket.userAvatar || null,
   };
 };

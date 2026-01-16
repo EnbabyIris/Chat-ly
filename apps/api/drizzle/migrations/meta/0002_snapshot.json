@@ -1,0 +1,14 @@
+{
+  "id": "performance_indexes",
+  "prevId": "0001_fuzzy_zaladane",
+  "version": "5",
+  "dialect": "pg",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

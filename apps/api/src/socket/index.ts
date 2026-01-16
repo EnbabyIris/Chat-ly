@@ -8,6 +8,7 @@ import { TypingHandler } from './handlers/typing.handler';
 import { PresenceHandler } from './handlers/presence.handler';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
 import type { SocketEvents } from './types';
+import { ChatService } from '../services/chat.service';
 
 export class SocketIOServer {
   private io: Server<SocketEvents>;
@@ -15,6 +16,7 @@ export class SocketIOServer {
   private chatHandler: ChatHandler;
   private typingHandler: TypingHandler;
   private presenceHandler: PresenceHandler;
+  private chatService: ChatService;
 
   constructor(httpServer: HttpServer) {
     // Initialize Socket.IO server
@@ -34,6 +36,7 @@ export class SocketIOServer {
     this.chatHandler = new ChatHandler(this.io);
     this.typingHandler = new TypingHandler(this.io);
     this.presenceHandler = new PresenceHandler(this.io);
+    this.chatService = new ChatService();
 
     this.setupMiddleware();
     this.setupEventHandlers();
@@ -65,6 +68,18 @@ export class SocketIOServer {
 
       // Handle user coming online
       await this.presenceHandler.handleConnection(socket);
+
+      // Auto-join user to all their chats so real-time messages arrive instantly
+      // even when the chat isn't currently open on the frontend.
+      try {
+        const userChats = await this.chatService.getUserChats(user.userId);
+        const rooms = userChats.map((chat) => `chat:${chat.id}`);
+        if (rooms.length > 0) {
+          await socket.join(rooms);
+        }
+      } catch (error) {
+        console.error('Failed to auto-join user chat rooms:', error);
+      }
 
       // Emit authentication success
       socket.emit('authenticated', { 

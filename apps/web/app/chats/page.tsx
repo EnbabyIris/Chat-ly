@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ChatSidebar } from '@/components/chat/chat-sidebar';
 import { ChatArea } from '@/components/chat/chat-area';
 import { FloatingHeader } from '@/components/layouts/floating-header';
@@ -8,8 +8,11 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useChatData } from '@/hooks/use-chat-data';
 import { useChatFilters } from '@/hooks/use-chat-filters';
 import { useChatActions } from '@/hooks/use-chat-actions';
+import { useRealTimeMessages } from '@/hooks/use-real-time-messages';
+import { useRealTimeNotifications } from '@/hooks/use-real-time-notifications';
 import { useAuth } from '@/contexts/auth-context';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { getErrorMessage } from '@/lib/utils/error-messages';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,35 +24,58 @@ function ChatsPageContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('chats');
   const { user } = useAuth();
   const { isOffline } = useNetworkStatus();
+  const { onlineUsers } = useOnlineStatus();
   const queryClient = useQueryClient();
 
   // Debounce search query to avoid excessive filtering/API calls
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
 
   // Get data from custom hooks
-  const { users, chats, messages, currentUser, onlinePeople, isLoading, error } = useChatData();
+  const { users, chats, currentUser, onlinePeople, isLoading, error } = useChatData();
   
-  // Filter data based on debounced search query (only if currentUser exists)
+  // Create consistent current user (prefer auth context over API data)
+  const activeCurrentUser = user ? {
+    _id: user.id,
+    name: user.name,
+    pic: user.avatar || '',
+    email: user.email,
+    isOnline: true,
+  } : currentUser || { _id: '', name: '', pic: '', email: '', isOnline: false };
+
+  // Filter data based on debounced search query
   const { filteredUsers, filteredChats } = useChatFilters({
     users,
     chats,
     searchQuery: debouncedSearchQuery,
-    currentUser: currentUser || { _id: '', name: '', pic: '' },
+    currentUser: activeCurrentUser,
   });
 
-  // Get action handlers (only if currentUser exists)
+  // Get action handlers
   const { handleSendMessage, handleSendFile, handleStartChat } = useChatActions({
-    currentUser: currentUser || { _id: '', name: '', pic: '' },
+    currentUser: activeCurrentUser,
     setSelectedChat,
     setActiveTab,
+    chats,
   });
 
-  // Use real user data from auth context
-  const realCurrentUser = user ? {
-    _id: user.id,
-    name: user.name,
-    pic: user.avatar || '',
-  } : currentUser;
+  // Setup real-time message handling
+  useRealTimeMessages({
+    selectedChatId: selectedChat?.id,
+    currentUserId: activeCurrentUser._id,
+  });
+
+  // Setup real-time notification handling
+  useRealTimeNotifications({
+    currentUserId: activeCurrentUser._id,
+  });
+
+  // Notification navigation handler
+  const handleNotificationChatSelect = useCallback((chatId: string) => {
+    const chat = chats.find(c => c.id === chatId);
+    if (chat) {
+      setSelectedChat(chat);
+    }
+  }, [chats]);
 
   // Handle loading state
   if (isLoading) {
@@ -97,12 +123,13 @@ function ChatsPageContent() {
       )}
       
       {/* Floating Header */}
-      {realCurrentUser && (
+      {activeCurrentUser._id && (
         <FloatingHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          currentUser={realCurrentUser}
-          notificationCount={3}
+          currentUser={activeCurrentUser}
+          onChatSelect={handleNotificationChatSelect}
+          onTabChange={setActiveTab}
         />
       )}
 
@@ -112,17 +139,16 @@ function ChatsPageContent() {
           onTabChange={setActiveTab}
           filteredChats={filteredChats}
           filteredUsers={filteredUsers}
-          currentUser={realCurrentUser || { _id: '', name: '', pic: '' }}
+          currentUser={activeCurrentUser}
           selectedChat={selectedChat}
-          onlinePeople={onlinePeople}
+          onlinePeople={Array.from(onlineUsers)}
           onChatSelect={setSelectedChat}
           onUserSelect={handleStartChat}
         />
 
         <ChatArea
           selectedChat={selectedChat}
-          messages={messages}
-          currentUser={realCurrentUser || { _id: '', name: '', pic: '' }}
+          currentUser={activeCurrentUser}
           onlinePeople={onlinePeople}
           onSendMessage={handleSendMessage}
           onSendFile={handleSendFile}

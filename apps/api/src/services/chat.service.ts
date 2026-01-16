@@ -41,7 +41,7 @@ export class ChatService {
     );
 
     // Fetch and return complete chat
-    return this.getChatById(newChat.id, userId);
+    return await this.getChatById(newChat.id, userId);
   }
 
   async findExistingOneToOneChat(user1Id: string, user2Id: string) {
@@ -155,7 +155,16 @@ export class ChatService {
       name: uc.chat.name,
       isGroupChat: uc.chat.isGroupChat,
       avatar: uc.chat.avatar,
-      participants: uc.chat.participants.map((p) => p.user),
+      participants: uc.chat.participants
+        .filter((p) => p.user && p.user.id && p.user.name)
+        .map((p) => ({
+          id: p.user.id,
+          name: p.user.name,
+          email: p.user.email,
+          avatar: p.user.avatar,
+          isOnline: p.user.isOnline,
+          lastSeen: p.user.lastSeen,
+        })),
       latestMessage: uc.chat.messages[0]
         ? {
             id: uc.chat.messages[0].id,

@@ -1,5 +1,6 @@
 import type { ChatListItem, ChatUser } from '@repo/shared';
 import { useOnlineStatus } from '@/hooks/use-online-status';
+import { useSocket } from '@/contexts/socket-context';
 
 interface ChatHeaderProps {
   selectedChat: ChatListItem;
@@ -13,10 +14,9 @@ export const ChatHeader = ({
   onlinePeople,
 }: ChatHeaderProps) => {
   const { isUserOnline } = useOnlineStatus();
+  const { isConnected, isConnecting } = useSocket();
 
-  const otherUser = selectedChat.participants
-    .map(p => p.user)
-    .find(u => u && u.id !== currentUser._id);
+  const otherUser = selectedChat.participants?.find(u => u && u.id !== currentUser._id);
   const isOnline = otherUser && (onlinePeople.includes(otherUser.id) || isUserOnline(otherUser.id));
 
   return (
@@ -33,21 +33,35 @@ export const ChatHeader = ({
             </span>
           )}
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="font-semibold text-neutral-900">
             {selectedChat.isGroupChat 
               ? selectedChat.name || 'Group Chat'
-              : otherUser?.name || 'Unknown'
+              : otherUser?.name || 'User'
             }
           </h2>
           <p className="text-sm text-neutral-500">
-            {selectedChat.isGroupChat 
-              ? `${selectedChat.participants.length} members`
-              : isOnline 
-                ? 'Online' 
+            {selectedChat.isGroupChat
+              ? `${selectedChat.participants?.length || 0} members`
+              : isOnline
+                ? 'Online'
                 : 'Offline'
             }
           </p>
+        </div>
+        
+        {/* Connection Status Indicator */}
+        <div className="flex items-center gap-1">
+          <div className={`w-2 h-2 rounded-full ${
+            isConnecting 
+              ? 'bg-yellow-500 animate-pulse' 
+              : isConnected 
+                ? 'bg-green-500' 
+                : 'bg-red-500'
+          }`}></div>
+          <span className="text-xs text-neutral-400">
+            {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Disconnected'}
+          </span>
         </div>
       </div>
     </div>

@@ -32,16 +32,23 @@ export function useOnlineStatus(): OnlineStatus {
         }
         return updated;
       });
-      
+
       // Invalidate user queries to update online status
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(data.userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
     };
 
+    const handleOnlineUsersInit = (data: { onlineUsers: { userId: string; isOnline: boolean }[] }) => {
+      const onlineUserIds = data.onlineUsers.map(user => user.userId);
+      setOnlineUsers(new Set(onlineUserIds));
+    };
+
     socket.on(SOCKET_EVENTS.USER_STATUS, handleUserStatus);
+    (socket as any).on('online_users_init' as any, handleOnlineUsersInit);
 
     return () => {
       socket.off(SOCKET_EVENTS.USER_STATUS, handleUserStatus);
+      socket.off('online_users_init' as any, handleOnlineUsersInit);
     };
   }, [socket, isConnected, queryClient]);
 

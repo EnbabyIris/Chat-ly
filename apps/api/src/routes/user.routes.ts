@@ -45,4 +45,10 @@ router.get(
   userController.getUserById.bind(userController)
 );
 
+// GET /api/users/online - Get currently online users
+router.get(
+  '/online',
+  userController.getOnlineUsers.bind(userController)
+);
+
 export { router as userRoutes };

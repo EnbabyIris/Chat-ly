@@ -1,8 +1,8 @@
 import { API_ENDPOINTS, HTTP_STATUS } from '@repo/shared/constants';
-import type { 
-  RegisterDTO, 
-  LoginDTO, 
-  AuthResponse, 
+import type {
+  RegisterDTO,
+  LoginDTO,
+  AuthResponse,
   User,
   UserListItem,
   UpdateProfileDTO,
@@ -13,6 +13,7 @@ import type {
   Message,
   SendMessageDTO,
   UpdateMessageDTO,
+  NotificationSummary,
   ApiResponse 
 } from '@repo/shared/types';
 
@@ -362,7 +363,7 @@ class ApiClient {
       // Update stored user data
       const accessToken = tokenStorage.getAccessToken();
       const refreshToken = tokenStorage.getRefreshToken();
-      
+
       if (accessToken && refreshToken) {
         tokenStorage.setTokens(accessToken, refreshToken, response.data);
       }
@@ -371,6 +372,77 @@ class ApiClient {
     }
 
     throw new ClientApiError(500, 'Failed to update profile');
+  }
+
+  /**
+   * Get currently online users
+   */
+  async getOnlineUsers(): Promise<{ users: UserListItem[]; total: number }> {
+    const response = await this.request<{ users: UserListItem[]; total: number }>(
+      `/api/v1${API_ENDPOINTS.USERS.ONLINE}`
+    );
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to fetch online users');
+  }
+
+  // ================================
+  // Notification Management Methods
+  // ================================
+
+  /**
+   * Get notifications for current user
+   */
+  async getNotifications(filters?: { limit?: number; unreadOnly?: boolean }): Promise<NotificationSummary> {
+    const params = new URLSearchParams();
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.unreadOnly) params.append('unreadOnly', filters.unreadOnly.toString());
+
+    const queryString = params.toString();
+    const endpoint = `/api/v1${API_ENDPOINTS.NOTIFICATIONS.LIST}${queryString ? `?${queryString}` : ''}`;
+
+    const response = await this.request<NotificationSummary>(endpoint);
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new ClientApiError(500, 'Failed to fetch notifications');
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    const response = await this.request(
+      `/api/v1${API_ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId)}`,
+      {
+        method: 'POST',
+      }
+    );
+
+    if (!response.success) {
+      throw new ClientApiError(500, 'Failed to mark notification as read');
+    }
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllNotificationsAsRead(): Promise<void> {
+    const response = await this.request(
+      `/api/v1${API_ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ}`,
+      {
+        method: 'POST',
+      }
+    );
+
+    if (!response.success) {
+      throw new ClientApiError(500, 'Failed to mark all notifications as read');
+    }
   }
 
   // ================================
@@ -416,7 +488,7 @@ class ApiClient {
    * Create a new chat
    */
   async createChat(data: CreateChatDTO): Promise<Chat> {
-    const response = await this.request<Chat>(
+    const response = await this.request<{ chat: Chat }>(
       `/api/v1${API_ENDPOINTS.CHATS.CREATE}`,
       {
         method: 'POST',
@@ -424,8 +496,8 @@ class ApiClient {
       }
     );
 
-    if (response.success && response.data) {
-      return response.data;
+    if (response.success && response.data?.chat) {
+      return response.data.chat;
     }
 
     throw new ClientApiError(500, 'Failed to create chat');

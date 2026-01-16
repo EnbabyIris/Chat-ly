@@ -1,3 +1,4 @@
+
 import { ChatSidebarHeader } from './chat-sidebar-header';
 import { ChatList } from './chat-list';
 import { UserList } from './user-list';
@@ -43,7 +44,10 @@ export const ChatSidebar = ({
             onChatSelect={onChatSelect}
           />
         ) : (
-          <UserList users={filteredUsers} onUserSelect={onUserSelect} />
+          <UserList
+            users={filteredUsers}
+            onUserSelect={onUserSelect}
+          />
         )}
       </div>
     </div>

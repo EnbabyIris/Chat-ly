@@ -17,12 +17,11 @@ export const useChatData = (): UseChatDataReturn => {
   const { data: usersData, isLoading: usersLoading, error: usersError } = useUsers();
   const { data: chatsData, isLoading: chatsLoading, error: chatsError } = useChats();
   const { data: currentUserData, isLoading: currentUserLoading, error: currentUserError } = useCurrentUser();
-  
-  // For messages, we'll need a default chat ID or handle this differently
-  // For now, return empty array until a specific chat is selected
+
+  // Messages will be loaded per-chat when a chat is selected
   const messages: Message[] = [];
   
-  // Temporary mock online people until we implement real presence
+  // Online people will be populated by real-time presence system
   const onlinePeople: string[] = [];
 
   // Combine loading states

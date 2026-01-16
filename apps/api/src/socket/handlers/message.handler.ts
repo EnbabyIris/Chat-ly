@@ -1,12 +1,10 @@
 import type { Server, Socket } from 'socket.io';
 import { MessageService } from '../../services/message.service';
-import { ChatService } from '../../services/chat.service';
 import { getSocketUser } from '../auth.middleware';
 import type { SendMessageData, MessageData, ReadMessageData } from '../types';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
 
 const messageService = new MessageService();
-const chatService = new ChatService();
 
 export class MessageHandler {
   constructor(private io: Server) {}
@@ -45,43 +43,82 @@ export class MessageHandler {
         return;
       }
 
-      // Verify user is participant of the chat
-      const isParticipant = await chatService.isUserParticipant(data.chatId, user.userId);
-      if (!isParticipant) {
-        socket.emit(SOCKET_EVENTS.ERROR, {
-          message: 'You are not a participant of this chat',
-          code: 'FORBIDDEN'
-        });
-        return;
-      }
+      const chatRoom = `chat:${data.chatId}`;
 
-      // Send message through service
-      const message = await messageService.sendMessage(user.userId, {
+      // Use cached user info from socket (no DB call needed!)
+      const tempMessage: MessageData = {
+        id: `temp-${Date.now()}-${Math.random()}`, // Temporary ID for instant delivery
+        chatId: data.chatId,
+        senderId: user.userId,
+        senderName: user.userName,
+        senderAvatar: user.userAvatar || undefined,
+        sender: {
+          id: user.userId,
+          name: user.userName,
+          avatar: user.userAvatar || undefined,
+        },
+        content: data.content.trim(),
+        messageType: data.messageType as 'text' | 'image' | 'file' | 'system' || 'text',
+        attachmentUrl: data.attachmentUrl || undefined,
+        replyToId: data.replyToId || undefined,
+        isEdited: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // INSTANT BROADCAST
+      // - Always echo to sender immediately (even if room join is delayed)
+      // - Broadcast to everyone else via chat room
+      socket.emit(SOCKET_EVENTS.MESSAGE_NEW, tempMessage);
+      socket.to(chatRoom).emit(SOCKET_EVENTS.MESSAGE_NEW, tempMessage);
+      
+      console.log(`⚡ INSTANT message broadcast for chat ${data.chatId}`);
+
+      // Save to database in background (async, non-blocking)
+      messageService.sendMessage(user.userId, {
         chatId: data.chatId,
         content: data.content.trim(),
         messageType: data.messageType || 'text',
         attachmentUrl: data.attachmentUrl,
         replyToId: data.replyToId,
+      }).then((savedMessage) => {
+        // Send update with real DB ID (optional - for perfect consistency)
+        const realMessageData: MessageData = {
+          id: savedMessage.id, // Real database ID
+          chatId: savedMessage.chatId,
+          senderId: savedMessage.senderId!,
+          senderName: savedMessage.sender?.name || user.userName,
+          senderAvatar: savedMessage.sender?.avatar || user.userAvatar || undefined,
+          sender: {
+            id: savedMessage.senderId!,
+            name: savedMessage.sender?.name || user.userName,
+            avatar: savedMessage.sender?.avatar || user.userAvatar || undefined,
+          },
+          content: savedMessage.content,
+          messageType: savedMessage.messageType as 'text' | 'image' | 'file' | 'system',
+          attachmentUrl: savedMessage.attachmentUrl || undefined,
+          replyToId: savedMessage.replyToId || undefined,
+          isEdited: savedMessage.isEdited,
+          createdAt: savedMessage.createdAt,
+          updatedAt: savedMessage.updatedAt,
+        };
+
+        // Update clients with real DB ID (replaces temp message)
+        this.io.to(chatRoom).emit('message:db_saved', {
+          tempId: tempMessage.id,
+          realMessage: realMessageData
+        });
+
+        console.log(`💾 Message saved to DB with ID: ${savedMessage.id}`);
+      }).catch((error) => {
+        console.error('❌ Failed to save message to DB:', error);
+        
+        // Notify clients of failure
+        this.io.to(chatRoom).emit('message:save_failed', {
+          tempId: tempMessage.id,
+          error: 'Failed to save message'
+        });
       });
-
-      // Format message for broadcasting
-      const messageData: MessageData = {
-        id: message.id,
-        chatId: message.chatId,
-        senderId: message.senderId!,
-        senderName: message.sender?.name || 'Unknown',
-        senderAvatar: message.sender?.avatar || undefined,
-        content: message.content,
-        messageType: message.messageType as 'text' | 'image' | 'file' | 'system',
-        attachmentUrl: message.attachmentUrl || undefined,
-        replyToId: message.replyToId || undefined,
-        isEdited: message.isEdited,
-        createdAt: message.createdAt,
-        updatedAt: message.updatedAt,
-      };
-
-      // Broadcast to all chat participants
-      this.io.to(`chat:${data.chatId}`).emit(SOCKET_EVENTS.MESSAGE_NEW, messageData);
 
       console.log(`📨 Message sent in chat ${data.chatId} by ${user.userId}`);
     } catch (error) {

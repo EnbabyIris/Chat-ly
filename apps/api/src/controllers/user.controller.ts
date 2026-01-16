@@ -5,6 +5,7 @@ import type { AuthRequest } from '../middleware/auth';
 import { HTTP_STATUS } from '@repo/shared/constants';
 import type { UserIdParam } from '@repo/shared/validations';
 import type { UpdateProfileDTO } from '@repo/shared/types';
+import type { OnlineUser } from '../socket/types';
 
 const userService = new UserService();
 
@@ -80,8 +81,56 @@ export class UserController {
       return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
     }
 
-    const users = await userService.getAllUsers();
+    const users = await userService.getAllUsers(req.user.userId);
 
-    return successResponse(res, { users }, 'Users retrieved successfully');
+    return successResponse(res, {
+      users,
+      total: users.length,
+      page: 1,
+      limit: users.length
+    }, 'Users retrieved successfully');
+  }
+
+  /**
+   * Get currently online users
+   * GET /api/users/online
+   */
+  async getOnlineUsers(req: AuthRequest, res: Response): Promise<Response> {
+    if (!req.user) {
+      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    // Get presence handler from socket server
+    // Import server instance dynamically to avoid circular dependencies
+    const server = require('../server').default;
+    const socketServer = server.getSocketServer();
+    const presenceHandler = socketServer.getPresenceHandler();
+
+    const onlineUsers = presenceHandler.getOnlineUsers();
+
+    // Fetch complete user data for online users
+    const userPromises = onlineUsers.map(async (onlineUser: OnlineUser) => {
+      try {
+        const userDetails = await userService.getUserById(onlineUser.userId);
+        return {
+          id: userDetails.id,
+          name: userDetails.name,
+          email: userDetails.email,
+          avatar: userDetails.avatar,
+          isOnline: true,
+          lastSeen: null, // Online users don't have lastSeen
+        };
+      } catch (error) {
+        console.error(`Failed to fetch user ${onlineUser.userId}:`, error);
+        return null;
+      }
+    });
+
+    const users = (await Promise.all(userPromises)).filter(user => user !== null);
+
+    return successResponse(res, {
+      users,
+      total: users.length
+    }, 'Online users retrieved successfully');
   }
 }

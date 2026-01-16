@@ -26,10 +26,11 @@ export function useChats(
     queryFn: async () => {
       return await apiClient.getChats(filters);
     },
-    staleTime: 1 * 60 * 1000, // 1 minute - chats update frequently
-    gcTime: 5 * 60 * 1000, // 5 minutes - keep in cache
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds for real-time updates
-    refetchIntervalInBackground: false, // Don't refetch when tab is in background
+    staleTime: 5 * 60 * 1000, // 5 minutes - chat updates come via Socket.IO
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+    // No polling: chat ordering/preview is updated from Socket.IO events
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     ...options,
   });
 }
@@ -106,8 +107,9 @@ export function useCreateChat(
       }
     },
     onSuccess: (newChat) => {
-      // Invalidate chat list to refetch with server response
-      queryClient.invalidateQueries({ queryKey: queryKeys.chats.lists() });
+      // Invalidate all chat-related queries to refetch with server response
+      queryClient.invalidateQueries({ queryKey: queryKeys.chats.all });
+      
       // Set the new chat in cache
       queryClient.setQueryData(queryKeys.chats.detail(newChat.id), newChat);
     },

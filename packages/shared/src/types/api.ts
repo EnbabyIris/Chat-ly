@@ -42,35 +42,37 @@ export interface SocketEvents {
     messageType?: 'text' | 'image' | 'file';
     replyToId?: string;
   }) => void;
-  'message:typing': (data: { 
-    chatId: string; 
-    userId: string; 
-    isTyping: boolean 
+  'message:typing': (data: {
+    chatId: string;
+    userId: string;
+    isTyping: boolean
   }) => void;
-  'message:read': (data: { 
-    messageId: string; 
-    userId: string 
+  'message:read': (data: {
+    messageId: string;
+    userId: string
   }) => void;
-  'chat:join': (chatId: string) => void;
-  'chat:leave': (chatId: string) => void;
+  'chat:join': (data: { chatId: string }) => void;
+  'chat:leave': (data: { chatId: string }) => void;
+  'notification:read': (data: { notificationId: string }) => void;
+  'notification:mark_all_read': () => void;
 
   // Server to Client Events
-  'user:status': (data: { 
-    userId: string; 
-    isOnline: boolean; 
-    lastSeen?: Date 
+  'user:status': (data: {
+    userId: string;
+    isOnline: boolean;
+    lastSeen?: Date
   }) => void;
   'message:new': (message: any) => void;
   'message:updated': (message: any) => void;
-  'message:deleted': (data: { 
-    messageId: string; 
-    chatId: string 
+  'message:deleted': (data: {
+    messageId: string;
+    chatId: string
   }) => void;
-  'message:typing:update': (data: { 
-    chatId: string; 
-    userId: string; 
-    userName: string; 
-    isTyping: boolean 
+  'message:typing:update': (data: {
+    chatId: string;
+    userId: string;
+    userName: string;
+    isTyping: boolean
   }) => void;
   'message:read:update': (data: {
     messageId: string;
@@ -88,8 +90,10 @@ export interface SocketEvents {
     chatId: string;
     userId: string;
   }) => void;
-  'error': (error: { 
-    message: string; 
+  'notification:new': (notification: any) => void;
+  'notification:updated': (notification: any) => void;
+  'error': (error: {
+    message: string;
     code?: string;
     details?: any;
   }) => void;

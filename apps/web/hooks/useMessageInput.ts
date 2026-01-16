@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useRealTimeMessages } from './use-real-time-messages';
 
 const useMessageInput = (
   selectedChat: any,
@@ -7,6 +8,10 @@ const useMessageInput = (
   onTypingStart?: () => void,
   onTypingStop?: () => void
 ) => {
+  // Get real-time messaging functions
+  const { sendTypingStart, sendTypingStop } = useRealTimeMessages({
+    selectedChatId: selectedChat?.id,
+  });
   const [newMessage, setNewMessage] = useState('');
   const [aiMessage, setAiMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -21,14 +26,14 @@ const useMessageInput = (
     setNewMessage(currentValue);
 
     // Handle typing indicators
-    if (onTypingStart && onTypingStop) {
-      if (previousValue.length === 0 && currentValue.length > 0) {
-        // Started typing
-        onTypingStart();
-      } else if (previousValue.length > 0 && currentValue.length === 0) {
-        // Stopped typing (cleared input)
-        onTypingStop();
-      }
+    if (previousValue.length === 0 && currentValue.length > 0) {
+      // Started typing
+      sendTypingStart();
+      onTypingStart?.();
+    } else if (previousValue.length > 0 && currentValue.length === 0) {
+      // Stopped typing (cleared input)
+      sendTypingStop();
+      onTypingStop?.();
     }
 
     // Simple AI suggestion logic
@@ -51,6 +56,8 @@ const useMessageInput = (
         sendMessage(newMessage.trim());
         setNewMessage('');
         setAiMessage('');
+        // Stop typing when message is sent
+        sendTypingStop();
       }
     } else if (e.key === 'Tab' && aiMessage) {
       e.preventDefault?.();

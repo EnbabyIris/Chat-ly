@@ -29,10 +29,11 @@ export function useMessages(
       return await apiClient.getChatMessages(chatId, filters);
     },
     enabled: !!chatId, // Only run if chatId exists
-    staleTime: 30 * 1000, // 30 seconds - messages update very frequently
-    gcTime: 5 * 60 * 1000, // 5 minutes - keep in cache
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds for real-time updates
-    refetchIntervalInBackground: false, // Don't refetch when tab is in background
+    staleTime: 5 * 60 * 1000, // 5 minutes - messages come via Socket.IO, not refetch
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+    // REMOVED: refetchInterval - messages come via Socket.IO only
+    refetchOnWindowFocus: false, // Don't refetch on focus - Socket.IO handles real-time
+    refetchOnReconnect: false, // Don't refetch on reconnect - Socket.IO handles this
     ...options,
   });
 }
@@ -126,10 +127,24 @@ export function useSendMessage(
       }
     },
     onSuccess: (sentMessage, variables) => {
-      // Invalidate to refetch with server response
-      queryClient.invalidateQueries({ queryKey: queryKeys.messages.list(variables.chatId) });
-      // Also invalidate chat list to update latest message
-      queryClient.invalidateQueries({ queryKey: queryKeys.chats.lists() });
+      // Don't invalidate - messages come via Socket.IO now
+      // Only update the optimistic update with real server response
+      const messageListKey = queryKeys.messages.list(variables.chatId);
+      const currentData = queryClient.getQueryData<MessageListData>(messageListKey);
+
+      if (currentData) {
+        // Replace optimistic message with server response
+        const updatedMessages = currentData.messages.map(msg => 
+          msg.id.startsWith('temp-') && msg.chatId === sentMessage.chatId
+            ? sentMessage 
+            : msg
+        );
+
+        queryClient.setQueryData<MessageListData>(messageListKey, {
+          ...currentData,
+          messages: updatedMessages,
+        });
+      }
     },
     ...options,
   });

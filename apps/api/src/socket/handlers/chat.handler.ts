@@ -62,8 +62,7 @@ export class ChatHandler {
       // Join socket room
       await socket.join(`chat:${data.chatId}`);
 
-      // Get user details
-      const userDetails = await userService.getUserById(user.userId);
+      // Use cached user info from socket (no DB call needed!)
 
       // Update chat room tracking
       if (!this.chatRooms.has(data.chatId)) {
@@ -81,13 +80,13 @@ export class ChatHandler {
       socket.to(`chat:${data.chatId}`).emit(SOCKET_EVENTS.CHAT_USER_JOINED, {
         chatId: data.chatId,
         user: {
-          id: userDetails.id,
-          name: userDetails.name,
-          avatar: userDetails.avatar
+          id: user.userId,
+          name: user.userName,
+          avatar: user.userAvatar
         }
       });
 
-      console.log(`🏠 User ${userDetails.name} joined chat ${data.chatId}`);
+      console.log(`🏠 User ${user.userName} joined chat ${data.chatId}`);
     } catch (error) {
       console.error('Error joining chat:', error);
       socket.emit(SOCKET_EVENTS.ERROR, {
@@ -132,20 +131,19 @@ export class ChatHandler {
         }
       }
 
-      // Get user details
-      const userDetails = await userService.getUserById(user.userId);
+      // Use cached user info from socket (no DB call needed!)
 
       // Notify other participants that user left
       socket.to(`chat:${data.chatId}`).emit(SOCKET_EVENTS.CHAT_USER_LEFT, {
         chatId: data.chatId,
         user: {
-          id: userDetails.id,
-          name: userDetails.name,
-          avatar: userDetails.avatar
+          id: user.userId,
+          name: user.userName,
+          avatar: user.userAvatar
         }
       });
 
-      console.log(`🚪 User ${userDetails.name} left chat ${data.chatId}`);
+      console.log(`🚪 User ${user.userName} left chat ${data.chatId}`);
     } catch (error) {
       console.error('Error leaving chat:', error);
       socket.emit(SOCKET_EVENTS.ERROR, {
@@ -169,14 +167,13 @@ export class ChatHandler {
           room.participants.delete(user.userId);
           room.typingUsers.delete(user.userId);
 
-          // Notify other participants
-          const userDetails = await userService.getUserById(user.userId);
+          // Use cached user info from socket (no DB call needed!)
           socket.to(`chat:${chatId}`).emit(SOCKET_EVENTS.CHAT_USER_LEFT, {
             chatId,
             user: {
-              id: userDetails.id,
-              name: userDetails.name,
-              avatar: userDetails.avatar
+              id: user.userId,
+              name: user.userName,
+              avatar: user.userAvatar
             }
           });
 
