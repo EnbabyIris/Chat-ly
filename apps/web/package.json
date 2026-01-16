@@ -48,5 +48,9 @@
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
     "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@9.1.0",
+  "engines": {
+    "node": "20.x"
   }
 }
