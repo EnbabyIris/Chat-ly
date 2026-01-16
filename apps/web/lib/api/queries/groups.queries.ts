@@ -9,10 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
 import type {
-  CreateGroupChatDTO,
-  GroupChatCreationResponse,
-  ParticipantOperationResponse,
-  ArchiveOperationResponse
+  CreateGroupChatDTO
 } from '@repo/shared/types';
 
 /**
@@ -22,7 +19,7 @@ import type {
  * @returns Mutation object with create function
  */
 export function useCreateGroupChat(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<GroupChatCreationResponse, Error, CreateGroupChatDTO>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, CreateGroupChatDTO>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -50,7 +47,7 @@ export function useCreateGroupChat(
  * @returns Mutation object with add participants function
  */
 export function useAddGroupParticipants(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<ParticipantOperationResponse, Error, { chatId: string; participantIds: string[] }>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, { chatId: string; participantIds: string[] }>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -74,7 +71,7 @@ export function useAddGroupParticipants(
  * @returns Mutation object with remove participant function
  */
 export function useRemoveGroupParticipant(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<ParticipantOperationResponse, Error, { chatId: string; participantId: string }>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, { chatId: string; participantId: string }>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -98,7 +95,7 @@ export function useRemoveGroupParticipant(
  * @returns Mutation object with transfer admin function
  */
 export function useTransferGroupAdmin(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<ParticipantOperationResponse, Error, { chatId: string; newAdminId: string }>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, { chatId: string; newAdminId: string }>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -122,7 +119,7 @@ export function useTransferGroupAdmin(
  * @returns Mutation object with archive function
  */
 export function useArchiveGroupChat(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<ArchiveOperationResponse, Error, string>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, string>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -146,7 +143,7 @@ export function useArchiveGroupChat(
  * @returns Mutation object with delete function
  */
 export function useDeleteGroupChat(
-  options?: Omit<import('@tanstack/react-query').UseMutationOptions<ArchiveOperationResponse, Error, { chatId: string; hardDelete?: boolean }>, 'mutationFn'>
+  options?: Omit<import('@tanstack/react-query').UseMutationOptions<any, Error, { chatId: string; hardDelete?: boolean }>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 

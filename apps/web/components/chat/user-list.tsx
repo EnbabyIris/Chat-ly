@@ -27,7 +27,12 @@ export const UserList = ({ users, onUserSelect }: UserListProps) => {
       {users.map((user : UserType) => (
         <UserListItem
           key={user.id}
-          user={user as User}
+          user={{
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            pic: user.avatar || undefined
+          }}
           handleFunction={() => onUserSelect(user)}
           isOnline={onlineUsers.has(user.id)}
         />

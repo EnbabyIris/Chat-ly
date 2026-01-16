@@ -27,9 +27,9 @@ export function useTypingIndicator(chatId?: string) {
         }
         
         if (data.isTyping) {
-          updated[data.chatId].add(data.userId);
+          updated[data.chatId]?.add(data.userId);
         } else {
-          updated[data.chatId].delete(data.userId);
+          updated[data.chatId]?.delete(data.userId);
         }
         
         return updated;
@@ -53,7 +53,7 @@ export function useTypingIndicator(chatId?: string) {
 
   // Send typing start event
   const startTyping = useCallback(
-    (targetChatId: string) => {
+    (targetChatId: string, currentUserId: string) => {
       if (!socket || !isConnected || !targetChatId) return;
 
       // Clear existing timeout
@@ -64,12 +64,13 @@ export function useTypingIndicator(chatId?: string) {
       // Emit typing start
       socket.emit(SOCKET_EVENTS.MESSAGE_TYPING, {
         chatId: targetChatId,
+        userId: currentUserId,
         isTyping: true,
-      });
+        });
 
       // Auto-stop typing after 3 seconds
       typingTimeoutRef.current[targetChatId] = setTimeout(() => {
-        stopTyping(targetChatId);
+        stopTyping(targetChatId, currentUserId);
       }, 3000);
     },
     [socket, isConnected]
@@ -77,7 +78,7 @@ export function useTypingIndicator(chatId?: string) {
 
   // Send typing stop event
   const stopTyping = useCallback(
-    (targetChatId: string) => {
+    (targetChatId: string, currentUserId: string) => {
       if (!socket || !isConnected || !targetChatId) return;
 
       // Clear timeout
@@ -89,6 +90,7 @@ export function useTypingIndicator(chatId?: string) {
       // Emit typing stop
       socket.emit(SOCKET_EVENTS.MESSAGE_TYPING, {
         chatId: targetChatId,
+        userId: currentUserId,
         isTyping: false,
       });
     },

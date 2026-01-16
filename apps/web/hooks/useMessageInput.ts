@@ -112,7 +112,9 @@ const useMessageInput = (
 
   const onKeyDown = useCallback((e: KeyboardEvent | { key: string }) => {
     if (e.key === 'Enter') {
-      e.preventDefault?.();
+      if ('preventDefault' in e) {
+        e.preventDefault();
+      }
       if (newMessage.trim()) {
         sendMessage(newMessage.trim(), 'text');
         setNewMessage('');
@@ -121,11 +123,13 @@ const useMessageInput = (
         sendTypingStop();
       }
     } else if (e.key === 'Tab' && aiMessage) {
-      e.preventDefault?.();
+      if ('preventDefault' in e) {
+        e.preventDefault();
+      }
       setNewMessage(aiMessage);
       setAiMessage('');
     }
-  }, [newMessage, aiMessage, sendMessage]);
+  }, [newMessage, aiMessage, sendMessage, sendTypingStop]);
 
   const handleAISuggestionClick = useCallback(() => {
     if (aiMessage) {
@@ -200,11 +204,14 @@ const useMessageInput = (
         let interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
+          const result = event.results[i];
+          if (result && result[0]) {
+            const transcript = result[0].transcript;
+            if (result.isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
           }
         }
 
