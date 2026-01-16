@@ -1,8 +1,8 @@
 // Export all types
-export * from './types/index.js';
+export * from './types';
 
 // Export all validations
-export * from './validations/index.js';
+export * from './validations';
 
 // Export all constants
-export * from './constants/index.js';
+export * from './constants';
