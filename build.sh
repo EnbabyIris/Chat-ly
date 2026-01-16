@@ -5,7 +5,7 @@ echo "Installing pnpm..."
 npm install -g pnpm@9.1.0
 
 echo "Installing dependencies with pnpm..."
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 
 echo "Building shared packages..."
 pnpm run build --filter=@repo/shared
