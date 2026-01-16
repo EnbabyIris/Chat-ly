@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react';
 import { UserListItem } from '@/components/chat/user-list-item';
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import type { UserListItem as UserType } from '@repo/shared';
+import type { UserListItem as UserType, User } from '@repo/shared';
 
 interface UserListProps {
   users: UserType[];
@@ -24,10 +24,10 @@ export const UserList = ({ users, onUserSelect }: UserListProps) => {
 
   return (
     <div className="space-y-2">
-      {users.map((user) => (
+      {users.map((user : UserType) => (
         <UserListItem
           key={user.id}
-          user={user}
+          user={user as User}
           handleFunction={() => onUserSelect(user)}
           isOnline={onlineUsers.has(user.id)}
         />
