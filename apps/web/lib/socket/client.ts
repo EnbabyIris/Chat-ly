@@ -6,8 +6,8 @@
 
 import { io, type Socket } from 'socket.io-client';
 import { tokenStorage } from '../api/client';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
-import type { SocketEvents } from '@repo/shared/types';
+import { SOCKET_EVENTS } from '../shared/constants';
+import type { SocketEvents } from '../shared/types';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 

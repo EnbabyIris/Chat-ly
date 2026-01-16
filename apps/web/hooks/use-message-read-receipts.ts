@@ -8,8 +8,8 @@ import { useEffect } from 'react';
 import { useSocket } from '@/contexts/socket-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/api/queries';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
-import type { Message, MessageReadReceipt } from '@repo/shared/types';
+import { SOCKET_EVENTS } from '../lib/shared/constants';
+import type { Message, MessageReadReceipt } from '../lib/shared/types';
 
 interface MessageListData {
   messages: Message[];

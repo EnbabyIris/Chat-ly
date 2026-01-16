@@ -15,7 +15,7 @@ import { useNetworkStatus } from '@/hooks/use-network-status';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { getErrorMessage } from '@/lib/utils/error-messages';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ChatListItem, ActiveTab } from '@repo/shared';
+import type { ChatListItem, ActiveTab } from '../../lib/shared';
 
 function ChatsPageContent() {
   const [selectedChat, setSelectedChat] = useState<ChatListItem | null>(null);

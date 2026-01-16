@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Search, User } from 'lucide-react';
 import { useUsers } from '@/lib/api/queries';
-import type { ChatUser, UserListItem } from '@repo/shared';
+import type { ChatUser, UserListItem } from '../../lib/shared';
 
 interface SearchUsersDialogProps {
   isOpen: boolean;

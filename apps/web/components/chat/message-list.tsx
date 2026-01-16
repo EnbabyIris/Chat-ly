@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MessageBubble } from './message-bubble';
-import type { Message, ChatUser } from '@repo/shared';
+import type { Message, ChatUser } from '../../lib/shared';
 
 interface MessageListProps {
   messages: Message[];

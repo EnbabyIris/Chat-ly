@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import Image from 'next/image';
-import type { User } from '@repo/shared';
+import type { User } from '../../lib/shared';
 
 interface UserListItemProps {
   user: User | { _id: string; name: string; email: string; pic?: string };

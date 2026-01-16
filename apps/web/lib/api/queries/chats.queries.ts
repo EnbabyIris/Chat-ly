@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
-import type { Chat, ChatListItem, CreateChatDTO, UpdateChatDTO } from '@repo/shared/types';
+import type { Chat, ChatListItem, CreateChatDTO, UpdateChatDTO } from '../../../lib/shared/types';
 
 /**
  * Query hook to get all chats for current user

@@ -8,7 +8,7 @@
 import { useInfiniteQuery, type UseInfiniteQueryOptions } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
-import type { Message } from '@repo/shared/types';
+import type { Message } from '../../../lib/shared/types';
 
 interface MessageListData {
   messages: Message[];

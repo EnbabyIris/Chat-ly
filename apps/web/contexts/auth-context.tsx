@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { apiClient, tokenStorage, ClientApiError } from '@/lib/api/client';
 import { useCurrentUser } from '@/lib/api/queries';
 import { queryKeys } from '@/lib/api/queries';
-import type { User, RegisterDTO, LoginDTO } from '@repo/shared/types';
+import type { User, RegisterDTO, LoginDTO } from '../lib/shared/types';
 import { socketClient } from '@/lib/socket/client';
 
 

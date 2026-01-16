@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useCallback, useState } fr
 import { useAuth } from './auth-context';
 import { socketClient } from '@/lib/socket/client';
 import type { Socket } from 'socket.io-client';
-import type { SocketEvents } from '@repo/shared/types';
+import type { SocketEvents } from '../lib/shared/types';
 
 interface SocketContextType {
   socket: Socket<SocketEvents> | null;

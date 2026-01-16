@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { queryKeys } from '@/lib/api/queries';
 import { apiClient } from '@/lib/api/client';
-import type { ChatListItem as ChatType, ChatUser } from '@repo/shared';
+import type { ChatListItem as ChatType, ChatUser } from '../../lib/shared';
 import { motion } from 'framer-motion';
 
 interface ChatListItemProps {

@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
-import type { Message, SendMessageDTO, UpdateMessageDTO } from '@repo/shared/types';
+import type { Message, SendMessageDTO, UpdateMessageDTO } from '../../../lib/shared/types';
 
 /**
  * Query hook to get messages for a chat

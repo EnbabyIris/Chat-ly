@@ -2,7 +2,7 @@
 import { ChatSidebarHeader } from './chat-sidebar-header';
 import { ChatList } from './chat-list';
 import { UserList } from './user-list';
-import type { ChatListItem, UserListItem, ChatUser, ActiveTab } from '@repo/shared';
+import type { ChatListItem, UserListItem, ChatUser, ActiveTab } from '../../lib/shared';
 
 interface ChatSidebarProps {
   activeTab: ActiveTab;

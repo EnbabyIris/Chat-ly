@@ -9,7 +9,7 @@ import { ChatListItem } from '@/components/chat/chat-list-item';
 import { cn } from '@/lib/utils';
 import { TIMING } from '@/lib/constants/timing';
 import { SIZES } from '@/lib/constants/sizes';
-import type { ChatListItem as SharedChatListItem } from '@repo/shared';
+import type { ChatListItem as SharedChatListItem } from '../../lib/shared';
 
 interface User {
   _id: string;
@@ -199,8 +199,8 @@ export const Step2ChatDemo = () => {
         >
           <ChatListItem
             chat={chat}
-            loggedUser={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
-            user={{ ...dummyUser, pic: dummyUser.pic || '' } as import('@repo/shared').ChatUser}
+            loggedUser={{ ...dummyUser, pic: dummyUser.pic || '' } as import('../../lib/shared').ChatUser}
+            user={{ ...dummyUser, pic: dummyUser.pic || '' } as import('../../lib/shared').ChatUser}
             selectedChat={index === activeChatIndex ? chat : null}
             onlinepeople={dummyOnlinePeople}
             setSelectedChat={handleSetSelectedChat as (chat: SharedChatListItem) => void}

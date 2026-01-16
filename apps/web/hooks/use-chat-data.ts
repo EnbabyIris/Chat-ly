@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useUsers, useChats, useCurrentUser } from '@/lib/api/queries';
-import type { UserListItem, ChatListItem, ChatUser, Message } from '@repo/shared';
+import type { UserListItem, ChatListItem, ChatUser, Message } from '../lib/shared';
 
 interface UseChatDataReturn {
   users: UserListItem[];

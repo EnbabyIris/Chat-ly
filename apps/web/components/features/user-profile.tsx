@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import type { ChatUser } from '@repo/shared';
+import type { ChatUser } from '../../lib/shared';
 
 interface UserProfileProps {
   user: ChatUser;

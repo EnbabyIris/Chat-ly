@@ -12,9 +12,9 @@
 import { useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '@/contexts/socket-context';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
+import { SOCKET_EVENTS } from '../lib/shared/constants';
 import { queryKeys } from '@/lib/api/queries';
-import type { ChatListItem, Message } from '@repo/shared/types';
+import type { ChatListItem, Message } from '../lib/shared/types';
 
 interface UseRealTimeMessagesParams {
   selectedChatId?: string;

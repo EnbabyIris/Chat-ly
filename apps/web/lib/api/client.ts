@@ -1,4 +1,4 @@
-import { API_ENDPOINTS, HTTP_STATUS } from '@repo/shared/constants';
+import { API_ENDPOINTS, HTTP_STATUS } from '../shared/constants';
 import type {
   RegisterDTO,
   LoginDTO,
@@ -13,8 +13,8 @@ import type {
   Message,
   SendMessageDTO,
   UpdateMessageDTO,
-  ApiResponse 
-} from '@repo/shared/types';
+  ApiResponse
+} from '../shared/types';
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -509,10 +509,10 @@ class ApiClient {
   /**
    * Create a new group chat
    */
-  async createGroupChat(data: import('@repo/shared/types').CreateGroupChatDTO): Promise<{ chat: import('@repo/shared/types').GroupChat; participants: import('@repo/shared/types').GroupParticipant[]; success: boolean }> {
+  async createGroupChat(data: import('../shared/types').CreateGroupChatDTO): Promise<{ chat: import('../shared/types').GroupChat; participants: import('../shared/types').GroupParticipant[]; success: boolean }> {
     const response = await this.request<{
-      chat: import('@repo/shared/types').GroupChat;
-      participants: import('@repo/shared/types').GroupParticipant[];
+      chat: import('../shared/types').GroupChat;
+      participants: import('../shared/types').GroupParticipant[];
       success: boolean;
     }>(
       `/api/v1${API_ENDPOINTS.GROUPS.CREATE}`,

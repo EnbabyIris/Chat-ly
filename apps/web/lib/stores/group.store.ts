@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { GroupChat } from '@repo/shared/types';
+import type { GroupChat } from '../shared/types';
 
 // Simple hook for group dialog state
 export const useGroupDialog = () => {

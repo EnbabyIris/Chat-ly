@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSocket } from '@/contexts/socket-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/api/queries';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
+import { SOCKET_EVENTS } from '../lib/shared/constants';
 
 interface OnlineStatus {
   onlineUsers: Set<string>;

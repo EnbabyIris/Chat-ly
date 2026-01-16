@@ -1,4 +1,4 @@
-import type { ChatListItem, ChatUser } from '@repo/shared';
+import type { ChatListItem, ChatUser } from '../../lib/shared';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { useSocket } from '@/contexts/socket-context';
 

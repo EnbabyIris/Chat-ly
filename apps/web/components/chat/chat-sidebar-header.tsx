@@ -1,6 +1,6 @@
 import { Users, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ActiveTab } from '@repo/shared';
+import type { ActiveTab } from '../../lib/shared';
 
 interface ChatSidebarHeaderProps {
   activeTab: ActiveTab;

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useRealTimeMessages } from './use-real-time-messages';
 import { useCloudinaryUpload } from '../lib/cloudinary';
-import type { ChatListItem, Message, SendMessageDTO } from '@repo/shared';
+import type { ChatListItem, Message, SendMessageDTO } from '../lib/shared';
 
 // TypeScript declarations for Web Speech API
 declare global {

@@ -5,7 +5,7 @@
  */
 
 import { ClientApiError } from '../api/client';
-import { HTTP_STATUS } from '@repo/shared/constants';
+import { HTTP_STATUS } from '../shared/constants';
 
 /**
  * Get user-friendly error message from an error

@@ -4,7 +4,7 @@ import { MessageList } from './message-list';
 import { EmptyChatState } from './empty-chat-state';
 import MessageInput from '@/components/features/message-input';
 import { useMessages } from '@/lib/api/queries';
-import type { ChatListItem, Message, ChatUser } from '@repo/shared';
+import type { ChatListItem, Message, ChatUser } from '../../lib/shared';
 
 interface ChatAreaProps {
   selectedChat: ChatListItem | null;

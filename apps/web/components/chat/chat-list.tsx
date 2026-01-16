@@ -1,6 +1,6 @@
 import { MessageCircle } from 'lucide-react';
 import { ChatListItem } from '@/components/chat/chat-list-item';
-import type { ChatListItem as ChatType, ChatUser } from '@repo/shared';
+import type { ChatListItem as ChatType, ChatUser } from '../../lib/shared';
 
 interface ChatListProps {
   chats: ChatType[];

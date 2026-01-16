@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useCreateChat } from '@/lib/api/queries';
 import { useSocket } from '@/contexts/socket-context';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
-import type { UserListItem, ChatListItem, ChatUser, ActiveTab, Chat, ChatParticipant } from '@repo/shared';
+import { SOCKET_EVENTS } from '../lib/shared/constants';
+import type { UserListItem, ChatListItem, ChatUser, ActiveTab, Chat, ChatParticipant } from '../lib/shared';
 
 interface UseChatActionsParams {
   currentUser: ChatUser;

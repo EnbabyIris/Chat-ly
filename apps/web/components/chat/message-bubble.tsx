@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import type { Message, ChatUser } from '@repo/shared';
+import type { Message, ChatUser } from '../../lib/shared';
 import { CldImage } from 'next-cloudinary';
 import { motion } from 'framer-motion';
 

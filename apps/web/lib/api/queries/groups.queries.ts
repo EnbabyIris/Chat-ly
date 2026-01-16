@@ -10,7 +10,7 @@ import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
 import type {
   CreateGroupChatDTO
-} from '@repo/shared/types';
+} from '../../shared/types';
 
 /**
  * Mutation hook to create a new group chat

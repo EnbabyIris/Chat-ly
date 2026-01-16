@@ -4,7 +4,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSocket } from '@/contexts/socket-context';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
+import { SOCKET_EVENTS } from '../lib/shared/constants';
 
 interface TypingUsers {
   [chatId: string]: Set<string>; // chatId -> Set of userIds who are typing

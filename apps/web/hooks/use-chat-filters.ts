@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { UserListItem, ChatListItem, ChatUser } from '@repo/shared';
+import type { UserListItem, ChatListItem, ChatUser } from '../lib/shared';
 
 interface UseChatFiltersParams {
   users: UserListItem[];

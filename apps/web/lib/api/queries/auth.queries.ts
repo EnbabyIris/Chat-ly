@@ -8,7 +8,7 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
-import type { User } from '@repo/shared/types';
+import type { User } from '../../../lib/shared/types';
 
 /**
  * Query hook to get current authenticated user

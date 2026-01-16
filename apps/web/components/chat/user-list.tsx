@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react';
 import { UserListItem } from '@/components/chat/user-list-item';
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import type { UserListItem as UserType, User } from '@repo/shared';
+import type { UserListItem as UserType, User } from '../../lib/shared';
 
 interface UserListProps {
   users: UserType[];

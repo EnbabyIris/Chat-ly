@@ -5,7 +5,7 @@ import { MdLocationOn, MdMic } from "react-icons/md";
 import { useEffect } from "react";
 import useMessageInput from "../../hooks/useMessageInput";
 import MessageActionBar from "./message-action-bar";
-import type { ChatListItem, SendMessageDTO } from '@repo/shared';
+import type { ChatListItem, SendMessageDTO } from '../../lib/shared';
 
 interface MessageInputProps {
   selectedChat: ChatListItem | null;

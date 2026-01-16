@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { z } from 'zod';
-import { registerSchema, loginSchema } from '@repo/shared/validations';
-import type { RegisterDTO, LoginDTO } from '@repo/shared/types';
+import { registerSchema, loginSchema } from '../lib/shared/validations';
+import type { RegisterDTO, LoginDTO } from '../lib/shared/types';
 
 // Form validation schemas
 const clientRegisterSchema = registerSchema.shape.body;
