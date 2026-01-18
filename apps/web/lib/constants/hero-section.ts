@@ -50,7 +50,7 @@ export const HERO_SECTION_CONFIG = {
   },
   image: {
     base: 'w-full h-full object-cover origin-center rounded-lg opacity-100',
-    src: 'https://www.sellyoursaas.org/medias/image/sellyoursaas.org/images/Example_screen_datadog.png',
+    src: '/herosection.png',
     alt: 'Chat-ly application preview',
   },
 } as const;

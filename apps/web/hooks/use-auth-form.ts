@@ -182,9 +182,11 @@ export function useRegisterForm(onSubmit: (values: RegisterDTO) => Promise<void>
       email: '',
       password: '',
       confirmPassword: '',
-    } as RegisterDTO & { confirmPassword: string },
+      avatar: '',
+    } as RegisterDTO & { confirmPassword: string; avatar: string },
     schema: clientRegisterSchema.extend({
       confirmPassword: z.string().min(1, 'Please confirm your password'),
+      avatar: z.string().optional(),
     }).refine(
       (data) => data.password === data.confirmPassword,
       {

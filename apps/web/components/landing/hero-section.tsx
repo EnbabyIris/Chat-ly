@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { MainButton } from '@/components/landing/main-button';
 import { GithubBadge } from '@/components/ui/github-badge';
 import { HERO_SECTION_CONFIG } from '@/lib/constants/hero-section';
+import heroSectionImage from '@/assets/herosection.png';
 
 export const HeroSection = () => {
   const {
@@ -46,7 +47,7 @@ export const HeroSection = () => {
           <div className={`${mask.base} ${mask.mobile} ${mask.desktop}`} />
           <div className={imageWrapper.border}>
             <Image
-              src={image.src}
+              src={heroSectionImage}
               alt={image.alt}
               width={1200}
               height={800}

@@ -4,7 +4,7 @@ import { Search, Users } from 'lucide-react';
 import { UserProfile } from '../features/user-profile';
 import { NotificationBell } from '../features/notification-bell';
 import { SearchUsersDialog } from '../features/search-users-dialog';
-import type { ChatUser, UserListItem } from '../../../lib/shared';
+import type { ChatUser, UserListItem } from '@/lib/shared/types';
 
 interface FloatingHeaderProps {
   currentUser: ChatUser;

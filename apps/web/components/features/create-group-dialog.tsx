@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useUsers } from '@/lib/api/queries';
 import { useCreateGroupChat } from '@/lib/api/queries';
 import { useAuth } from '@/contexts/auth-context';
-import { CreateGroupChatDTO, UserListItem } from '../../../lib/shared/types';
+import { CreateGroupChatDTO, UserListItem } from '@/lib/shared/types';
 
 interface CreateGroupDialogProps {
   isOpen: boolean;

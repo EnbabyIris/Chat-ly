@@ -29,6 +29,8 @@ export const MessageList = ({ messages, currentUser }: MessageListProps) => {
     previousMessageCountRef.current = messages.length;
   }, [messages.length]);
 
+  console.log(messages);
+
   return (
     <div
       ref={scrollContainerRef}

@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, EyeOff, User, Mail, Lock, Check, X } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, Shuffle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AuthInput } from './auth-input';
+import { ProfilePictureUpload } from './profile-picture-upload';
 import { useAuth } from '@/contexts/auth-context';
-import { useRegisterForm, usePasswordStrength } from '@/hooks/use-auth-form';
+import { useRegisterForm } from '@/hooks/use-auth-form';
+import { motion } from 'framer-motion';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -11,33 +15,82 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const { register, error, clearError } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { checkStrength } = usePasswordStrength();
 
   const form = useRegisterForm(register);
 
-  // Password strength analysis
-  const passwordStrength = form.values.password 
-    ? checkStrength(form.values.password) 
-    : null;
+  // Handle profile picture upload
+  const handleAvatarChange = (avatarUrl: string) => {
+    if (error) clearError();
+    form.setFieldValue('avatar', avatarUrl);
+  };
+
+  // Generate random username suggestion
+  const generateRandomUsername = () => {
+    const adjectives = ['Cool', 'Swift', 'Bright', 'Quick', 'Smart', 'Bold', 'Calm', 'Wild', 'Free', 'Pure'];
+    const nouns = ['Eagle', 'Tiger', 'Wolf', 'Bear', 'Lion', 'Fox', 'Owl', 'Hawk', 'Deer', 'Cat'];
+    const numbers = Math.floor(Math.random() * 999) + 1;
+
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+
+    return `${adjective}${noun}${numbers}`;
+  };
+
+  // Generate random password that meets requirements
+  const generateRandomPassword = () => {
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const specials = '!@#$%^&*';
+
+    let password = '';
+    // Ensure at least one of each type
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += specials[Math.floor(Math.random() * specials.length)];
+
+    // Fill remaining characters (minimum 8 total)
+    const allChars = lowercase + uppercase + numbers + specials;
+    for (let i = password.length; i < 12; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+  };
+
+  // Generate random email
+  const generateRandomEmail = (name: string) => {
+    const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
+    const domain = domains[Math.floor(Math.random() * domains.length)];
+    const randomNum = Math.floor(Math.random() * 9999) + 1000;
+    return `${name.toLowerCase().replace(/\s+/g, '')}${randomNum}@${domain}`;
+  };
+
+  // Handle random data generation for all fields
+  const handleGenerateRandomData = () => {
+    const randomName = generateRandomUsername();
+    const randomPassword = generateRandomPassword();
+    const randomEmail = generateRandomEmail(randomName);
+
+    // Fill all form fields
+    handleInputChange('name', randomName);
+    handleInputChange('email', randomEmail);
+    handleInputChange('password', randomPassword);
+    handleInputChange('confirmPassword', randomPassword);
+  };
+
 
   // Handle input change with error clearing
-  const handleInputChange = (field: 'name' | 'email' | 'password' | 'confirmPassword', value: string) => {
+  const handleInputChange = (field: 'name' | 'email' | 'password' | 'confirmPassword' | 'avatar', value: string) => {
     if (error) clearError();
-    form.setFieldValue(field, value);
+    form.setFieldValue(field as any, value);
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Create Account
-        </h1>
-        <p className="text-gray-600">
-          Join Chat-Turbo and start connecting with people
-        </p>
-      </div>
 
       <form onSubmit={form.handleSubmit} className="space-y-6">
         {/* Global Error */}
@@ -50,155 +103,89 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
         )}
 
-        {/* Name Field */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Full Name
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              id="name"
-              type="text"
-              value={form.values.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`
-                block w-full pl-10 pr-3 py-3 border rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                ${form.errors.name 
-                  ? 'border-red-300 bg-red-50' 
-                  : 'border-gray-300 bg-white'
-                }
-              `}
-              placeholder="Enter your full name"
-              autoComplete="name"
-            />
+        {/* Name Field with Profile Picture */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="name" className="block text-sm font-medium text-stone-700">
+              Full Name
+            </label>
+            <button
+              type="button"
+              onClick={handleGenerateRandomData}
+              disabled={form.isSubmitting}
+              className="text-xs text-stone-500 hover:text-stone-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              title="Generate random profile data"
+            >
+              <Shuffle className="w-3 h-3" />
+              Random
+            </button>
           </div>
-          {form.errors.name && (
-            <p className="mt-1 text-sm text-red-600">{form.errors.name}</p>
-          )}
+          <div className="flex items-end gap-4">
+            <ProfilePictureUpload
+              value={form.values.avatar || ''}
+              onChange={handleAvatarChange}
+              error={form.errors.avatar}
+              disabled={form.isSubmitting}
+            />
+            <div className="flex-1">
+              <AuthInput
+                id="name"
+                label=""
+                type="text"
+                value={form.values.name}
+                onChange={(value) => handleInputChange('name', value)}
+                placeholder="Enter your full name"
+                icon={User}
+                error={form.errors.name}
+                autoComplete="name"
+                layoutId="name-field"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Email Field */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              id="email"
-              type="email"
-              value={form.values.email}
-              onChange={(e) => handleInputChange('email', e.target.value.toLowerCase())}
-              className={`
-                block w-full pl-10 pr-3 py-3 border rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                ${form.errors.email 
-                  ? 'border-red-300 bg-red-50' 
-                  : 'border-gray-300 bg-white'
-                }
-              `}
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
-          </div>
-          {form.errors.email && (
-            <p className="mt-1 text-sm text-red-600">{form.errors.email}</p>
-          )}
-        </div>
+        <AuthInput
+          id="email"
+          label="Email Address"
+          type="email"
+          value={form.values.email}
+          onChange={(value) => handleInputChange('email', value.toLowerCase())}
+          placeholder="Enter your email"
+          icon={Mail}
+          error={form.errors.email}
+          autoComplete="email"
+          layoutId="email-field"
+        /> 
 
         {/* Password Field */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={form.values.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              className={`
-                block w-full pl-10 pr-10 py-3 border rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                ${form.errors.password 
-                  ? 'border-red-300 bg-red-50' 
-                  : 'border-gray-300 bg-white'
-                }
-              `}
-              placeholder="Create a strong password"
-              autoComplete="new-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              )}
-            </button>
-          </div>
-          
-          {/* Password Strength Indicator */}
-          {form.values.password && passwordStrength && (
-            <div className="mt-2">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-600">Password strength:</span>
-                <span className={`text-xs font-medium text-${passwordStrength.color}-600`}>
-                  {passwordStrength.strength.charAt(0).toUpperCase() + passwordStrength.strength.slice(1)}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full bg-${passwordStrength.color}-500 transition-all duration-300`}
-                  style={{ width: `${passwordStrength.percentage}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
-                {Object.entries(passwordStrength.checks).map(([key, passed]) => (
-                  <div key={key} className={`flex items-center ${passed ? 'text-green-600' : 'text-gray-400'}`}>
-                    {passed ? (
-                      <Check className="h-3 w-3 mr-1" />
-                    ) : (
-                      <X className="h-3 w-3 mr-1" />
-                    )}
-                    <span>
-                      {key === 'length' && '8+ characters'}
-                      {key === 'lowercase' && 'Lowercase'}
-                      {key === 'uppercase' && 'Uppercase'}
-                      {key === 'number' && 'Number'}
-                      {key === 'special' && 'Special char'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <motion.div layoutId='password-field'>
+          <AuthInput
+            id="password"
+            label="Password"
+            type="password"
+            value={form.values.password}
+            onChange={(value) => handleInputChange('password', value)}
+            placeholder="Create a strong password"
+            icon={Lock}
+            error={form.errors.password}
+            autoComplete="new-password"
+            layoutId="password-input"
+          />
           
           {form.errors.password && (
             <p className="mt-1 text-sm text-red-600">{form.errors.password}</p>
           )}
-        </div>
+        </motion.div>
 
         {/* Confirm Password Field */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700 mb-2">
             Confirm Password
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-stone-400" />
             </div>
             <input
               id="confirmPassword"
@@ -206,11 +193,12 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               value={form.values.confirmPassword}
               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               className={`
-                block w-full pl-10 pr-10 py-3 border rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                ${form.errors.confirmPassword 
-                  ? 'border-red-300 bg-red-50' 
-                  : 'border-gray-300 bg-white'
+                block w-full pl-10 pr-10 py-2 border rounded-xl
+                focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-transparent
+                transition-colors text-neutral-400
+                ${form.errors.confirmPassword
+                  ? 'border-red-300 bg-red-50 text-neutral-900'
+                  : 'border-stone-300 bg-neutral-100 hover:border-stone-400'
                 }
               `}
               placeholder="Confirm your password"
@@ -222,9 +210,9 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-5 w-5 text-stone-400 hover:text-stone-600" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-5 w-5 text-stone-400 hover:text-stone-600" />
               )}
             </button>
           </div>
@@ -234,36 +222,30 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         </div>
 
         {/* Submit Button */}
-        <button
+        <motion.div
+        layoutId='submit-button'
+        > 
+        <Button
           type="submit"
+          variant="primary"
           disabled={!form.isValid || form.isSubmitting}
-          className={`
-            w-full py-3 px-4 rounded-lg font-medium text-white
-            transition-all duration-200
-            ${form.isValid && !form.isSubmitting
-              ? 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
-              : 'bg-gray-400 cursor-not-allowed'
-            }
-          `}
+          loading={form.isSubmitting}
+          loadingText="Creating Account..."
+          className="w-full"
         >
-          {form.isSubmitting ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Creating Account...
-            </div>
-          ) : (
-            'Create Account'
-          )}
-        </button>
+          Create Account
+        </Button>
+        </motion.div>
       </form>
 
       {/* Switch to Login */}
-      <div className="mt-6 text-center">
-        <p className="text-gray-600">
+      <div className="mt-4 text-center">
+        <p className="text-neutral-400 text-sm">
           Already have an account?{' '}
           <button
             onClick={onSwitchToLogin}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            disabled={form.isSubmitting}
+            className="text-neutral-400  hover:text-stone-700 font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             Sign in
           </button>
