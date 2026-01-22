@@ -5,6 +5,7 @@ import { chatRoutes } from './chat.routes';
 import { messageRoutes } from './message.routes';
 import { chatMessagesRoutes } from './chat-messages.routes';
 import { groupRoutes } from './group.routes';
+import { statusRoutes } from './status.routes';
 import { errorHandler, notFoundHandler } from '../middleware/error-handler';
 
 const router = Router();
@@ -29,6 +30,7 @@ router.use(`${API_VERSION}/chats`, chatRoutes);
 router.use(`${API_VERSION}/chats`, chatMessagesRoutes); // Nested route: /chats/:chatId/messages
 router.use(`${API_VERSION}/groups`, groupRoutes);
 router.use(`${API_VERSION}/messages`, messageRoutes);
+router.use(`${API_VERSION}/statuses`, statusRoutes);
 
 // API documentation endpoint
 router.get(`${API_VERSION}`, (_req, res) => {
@@ -71,6 +73,13 @@ router.get(`${API_VERSION}`, (_req, res) => {
         'PUT /messages/:messageId': 'Update message',
         'DELETE /messages/:messageId': 'Delete message',
         'POST /messages/:messageId/read': 'Mark message as read'
+      },
+      statuses: {
+        'POST /statuses': 'Create new status',
+        'GET /statuses/my': 'Get current user statuses',
+        'GET /statuses': 'Get all statuses',
+        'GET /statuses/:statusId': 'Get status by ID',
+        'DELETE /statuses/:statusId': 'Delete status'
       }
     }
   });

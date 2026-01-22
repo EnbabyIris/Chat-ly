@@ -13,10 +13,7 @@ export interface SocketEvents {
   // Client to Server events
   'user:online': () => void;
   'user:offline': () => void;
-  'chat:join': (data: { chatId: string }) => void;
-  'chat:leave': (data: { chatId: string }) => void;
   'message:send': (data: SendMessageData) => void;
-  'message:typing': (data: TypingData) => void;
   'message:read': (data: ReadMessageData) => void;
 
   // Server to Client events
@@ -24,9 +21,6 @@ export interface SocketEvents {
   'message:new': (data: MessageData) => void;
   'message:updated': (data: MessageData) => void;
   'message:deleted': (data: { messageId: string; chatId: string }) => void;
-  'message:typing:update': (data: TypingUpdateData) => void;
-  'chat:user:joined': (data: ChatUserData) => void;
-  'chat:user:left': (data: ChatUserData) => void;
   'error': (data: ErrorData) => void;
   'authenticated': (data: { success: boolean; user?: UserData }) => void;
 }
@@ -68,18 +62,6 @@ export interface MessageData {
   updatedAt: Date;
 }
 
-export interface TypingData {
-  chatId: string;
-  isTyping: boolean;
-}
-
-export interface TypingUpdateData {
-  chatId: string;
-  userId: string;
-  userName: string;
-  isTyping: boolean;
-  timestamp: Date;
-}
 
 export interface ReadMessageData {
   messageId: string;
@@ -92,14 +74,6 @@ export interface UserStatusData {
   lastSeen?: Date;
 }
 
-export interface ChatUserData {
-  chatId: string;
-  user: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-}
 
 export interface UserData {
   id: string;
@@ -114,12 +88,6 @@ export interface ErrorData {
   details?: any;
 }
 
-// Room management types
-export interface ChatRoom {
-  chatId: string;
-  participants: Set<string>; // user IDs
-  typingUsers: Map<string, { userName: string; timestamp: Date }>;
-}
 
 // Online users tracking
 export interface OnlineUser {

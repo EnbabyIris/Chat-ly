@@ -30,3 +30,6 @@ export {
 // Message queries
 export { useMessages, useMessage, useSendMessage, useUpdateMessage, useDeleteMessage, useMarkMessageRead } from './messages.queries';
 export { useInfiniteMessages } from './messages-infinite.queries';
+
+// Status queries
+export { useUserStatuses, useAllStatuses, useCreateStatus, useDeleteStatus } from './status.queries';

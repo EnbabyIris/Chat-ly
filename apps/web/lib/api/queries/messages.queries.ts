@@ -177,12 +177,12 @@ export function useUpdateMessage(
 
 /**
  * Mutation hook to delete a message
- * 
+ *
  * @param options - TanStack Query mutation options
  * @returns Mutation object with delete function
  */
 export function useDeleteMessage(
-  options?: Omit<UseMutationOptions<void, Error, { messageId: string; chatId: string }, unknown>, 'mutationFn'>
+  options?: Omit<UseMutationOptions<void, Error, { messageId: string; chatId: string }, { previousMessages: MessageListData | undefined }>, 'mutationFn'>
 ) {
   const queryClient = useQueryClient();
 
@@ -190,10 +190,43 @@ export function useDeleteMessage(
     mutationFn: async ({ messageId }: { messageId: string; chatId: string }) => {
       return await apiClient.deleteMessage(messageId);
     },
+    onMutate: async ({ messageId, chatId }): Promise<{ previousMessages: MessageListData | undefined }> => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages.list(chatId) });
+
+      // Snapshot previous value for rollback
+      const previousMessages = queryClient.getQueryData<MessageListData>(
+        queryKeys.messages.list(chatId)
+      );
+
+      // Optimistically remove the message from cache
+      if (previousMessages) {
+        const updatedMessages = previousMessages.messages.filter(msg => msg.id !== messageId);
+
+        queryClient.setQueryData<MessageListData>(
+          queryKeys.messages.list(chatId),
+          {
+            ...previousMessages,
+            messages: updatedMessages,
+          }
+        );
+      }
+
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          queryKeys.messages.list(variables.chatId),
+          context.previousMessages
+        );
+      }
+    },
     onSuccess: (_, variables) => {
-      // Remove message from cache
+      // Remove message detail from cache
       queryClient.removeQueries({ queryKey: queryKeys.messages.detail(variables.messageId) });
-      // Invalidate message list to refetch without deleted message
+      // The optimistic update should be sufficient, but we can also invalidate as backup
       queryClient.invalidateQueries({ queryKey: queryKeys.messages.list(variables.chatId) });
     },
     ...options,

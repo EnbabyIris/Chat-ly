@@ -58,15 +58,6 @@ export const SOCKET_EVENTS = {
   MESSAGE_DELETED: 'message:deleted',
   MESSAGE_READ: 'message:read',
   MESSAGE_READ_UPDATE: 'message:read:update',
-
-
-  // Typing Events
-  MESSAGE_TYPING: 'message:typing',
-  MESSAGE_TYPING_UPDATE: 'message:typing:update',
-  
-  // Chat Events
-  CHAT_JOIN: 'chat:join',
-  CHAT_LEAVE: 'chat:leave',
   CHAT_CREATED: 'chat:created',
   CHAT_UPDATED: 'chat:updated',
   CHAT_USER_JOINED: 'chat:user:joined',

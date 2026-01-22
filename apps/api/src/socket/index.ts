@@ -3,8 +3,6 @@ import { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
 import { socketAuthMiddleware, getSocketUser } from './auth.middleware';
 import { MessageHandler } from './handlers/message.handler';
-import { ChatHandler } from './handlers/chat.handler';
-import { TypingHandler } from './handlers/typing.handler';
 import { PresenceHandler } from './handlers/presence.handler';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
 import type { SocketEvents } from './types';
@@ -13,8 +11,6 @@ import { ChatService } from '../services/chat.service';
 export class SocketIOServer {
   private io: Server<SocketEvents>;
   private messageHandler: MessageHandler;
-  private chatHandler: ChatHandler;
-  private typingHandler: TypingHandler;
   private presenceHandler: PresenceHandler;
   private chatService: ChatService;
 
@@ -22,9 +18,9 @@ export class SocketIOServer {
     // Initialize Socket.IO server
     this.io = new Server(httpServer, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: '*', // Allow all origins - accessible from anywhere in the world
         methods: ['GET', 'POST'],
-        credentials: true
+        credentials: false // Must be false when using wildcard origin
       },
       pingTimeout: 60000,
       pingInterval: 25000,
@@ -32,11 +28,9 @@ export class SocketIOServer {
     });
 
     // Initialize handlers
-    this.messageHandler = new MessageHandler(this.io);
-    this.chatHandler = new ChatHandler(this.io);
-    this.typingHandler = new TypingHandler(this.io);
-    this.presenceHandler = new PresenceHandler(this.io);
     this.chatService = new ChatService();
+    this.messageHandler = new MessageHandler(this.io, this.chatService);
+    this.presenceHandler = new PresenceHandler(this.io);
 
     this.setupMiddleware();
     this.setupEventHandlers();
@@ -65,6 +59,9 @@ export class SocketIOServer {
       }
 
       console.log(`🔌 Socket connected: ${user.userId} (${socket.id})`);
+
+      // Join user to their personal room for direct messaging
+      await socket.join(`user:${user.userId}`);
 
       // Handle user coming online
       await this.presenceHandler.handleConnection(socket);
@@ -103,8 +100,6 @@ export class SocketIOServer {
   private registerEventHandlers(socket: Socket): void {
     // Register handlers from each handler class
     this.messageHandler.registerHandlers(socket);
-    this.chatHandler.registerHandlers(socket);
-    this.typingHandler.registerHandlers(socket);
     this.presenceHandler.registerHandlers(socket);
 
     // Handle generic errors
@@ -129,7 +124,7 @@ export class SocketIOServer {
     setInterval(() => {
       const connectedSockets = this.io.engine.clientsCount;
       const onlineUsers = this.presenceHandler.getOnlineUserCount();
-      const activeRooms = this.chatHandler.getAllChatRooms().size;
+      const activeRooms = 0; // Chat rooms no longer tracked
       
       console.log(`📊 Socket.IO Stats: ${connectedSockets} sockets, ${onlineUsers} users online, ${activeRooms} active chats`);
     }, 60000); // Log every minute
@@ -147,20 +142,6 @@ export class SocketIOServer {
    */
   getMessageHandler(): MessageHandler {
     return this.messageHandler;
-  }
-
-  /**
-   * Get chat handler for external access
-   */
-  getChatHandler(): ChatHandler {
-    return this.chatHandler;
-  }
-
-  /**
-   * Get typing handler for external access
-   */
-  getTypingHandler(): TypingHandler {
-    return this.typingHandler;
   }
 
   /**
@@ -194,7 +175,7 @@ export class SocketIOServer {
     return {
       connectedSockets: this.io.engine.clientsCount,
       onlineUsers: this.presenceHandler.getOnlineUserCount(),
-      activeChats: this.chatHandler.getAllChatRooms().size
+      activeChats: 0 // Chat rooms no longer tracked
     };
   }
 
@@ -222,6 +203,4 @@ export const createSocketIOServer = (httpServer: HttpServer): SocketIOServer => 
 
 export * from './types';
 export * from './handlers/message.handler';
-export * from './handlers/chat.handler';
-export * from './handlers/typing.handler';
 export * from './handlers/presence.handler';

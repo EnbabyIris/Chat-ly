@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Users } from 'lucide-react';
 import { UserProfile } from '../features/user-profile';
 import { NotificationBell } from '../features/notification-bell';
@@ -65,18 +65,22 @@ export const FloatingHeader = ({
       </div>
 
       {/* Right side items */}
-      <div className="flex items-center  ml-auto">
+      <div className="flex items-center gap-3  ml-auto">
         <UserProfile user={currentUser} />
         <NotificationBell />
       </div>
 
       {/* Search Dialog */}
-      <SearchUsersDialog
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        currentUser={currentUser}
-        onUserSelect={(user) => onUserSelect?.(user)}
-      />
+      <AnimatePresence mode="wait">
+        {isSearchOpen && (
+          <SearchUsersDialog
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            currentUser={currentUser}
+            onUserSelect={(user) => onUserSelect?.(user)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

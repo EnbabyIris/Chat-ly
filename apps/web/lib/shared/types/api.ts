@@ -42,17 +42,10 @@ export interface SocketEvents {
     messageType?: 'text' | 'image' | 'file';
     replyToId?: string;
   }) => void;
-  'message:typing': (data: {
-    chatId: string;
-    userId: string;
-    isTyping: boolean
-  }) => void;
   'message:read': (data: {
     messageId: string;
     userId: string
   }) => void;
-  'chat:join': (data: { chatId: string }) => void;
-  'chat:leave': (data: { chatId: string }) => void;
   'notification:read': (data: { notificationId: string }) => void;
   'notification:mark_all_read': () => void;
 
@@ -68,12 +61,6 @@ export interface SocketEvents {
     messageId: string;
     chatId: string
   }) => void;
-  'message:typing:update': (data: {
-    chatId: string;
-    userId: string;
-    userName: string;
-    isTyping: boolean
-  }) => void;
   'message:read:update': (data: {
     messageId: string;
     userId: string;
@@ -82,14 +69,6 @@ export interface SocketEvents {
   }) => void;
   'chat:created': (chat: any) => void;
   'chat:updated': (chat: any) => void;
-  'chat:user:joined': (data: {
-    chatId: string;
-    user: any;
-  }) => void;
-  'chat:user:left': (data: {
-    chatId: string;
-    userId: string;
-  }) => void;
   'error': (error: {
     message: string;
     code?: string;

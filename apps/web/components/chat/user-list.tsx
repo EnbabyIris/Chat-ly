@@ -10,13 +10,17 @@ interface UserListProps {
 
 export const UserList = ({ users, onUserSelect }: UserListProps) => {
   const { onlineUsers } = useOnlineStatus();
-  if (users.length === 0) {
+
+  // Filter to show only online users
+  const onlineUsersList = users.filter(user => onlineUsers.has(user.id));
+
+  if (onlineUsersList.length === 0) {
     return (
-      <div className="text-center text-neutral-500 mt-12">
+      <div className="text-center text-neutral-500 mt-12 px-4">
         <Users className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-        <p className="text-sm">No users found</p>
-        <p className="text-xs text-neutral-400 mt-1">
-          Try a different search term
+        <p className="text-sm font-medium">No online users right now</p>
+        <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+          Search for other users to find and chat with someone
         </p>
       </div>
     );
@@ -24,7 +28,7 @@ export const UserList = ({ users, onUserSelect }: UserListProps) => {
 
   return (
     <div className="space-y-2">
-      {users.map((user : UserType) => (
+      {onlineUsersList.map((user : UserType) => (
         <UserListItem
           key={user.id}
           user={{
@@ -34,7 +38,7 @@ export const UserList = ({ users, onUserSelect }: UserListProps) => {
             pic: user.avatar || undefined
           }}
           handleFunction={() => onUserSelect(user)}
-          isOnline={onlineUsers.has(user.id)}
+          isOnline={true}
         />
       ))}
     </div>

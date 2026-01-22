@@ -5,7 +5,7 @@
  * Supports infinite scrolling for chat messages.
  */
 
-import { useInfiniteQuery, type UseInfiniteQueryOptions } from '@tanstack/react-query';
+import { useInfiniteQuery, type UseInfiniteQueryOptions, type InfiniteData } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import { queryKeys } from './query-keys';
 import type { Message } from '../../../lib/shared/types';
@@ -25,11 +25,11 @@ interface MessageListData {
  */
 export function useInfiniteMessages(
   chatId: string,
-  options?: Omit<UseInfiniteQueryOptions<MessageListData, Error, MessageListData, MessageListData, readonly unknown[], string | undefined>, 'queryKey' | 'queryFn' | 'getNextPageParam' | 'initialPageParam'>
+  options?: Omit<UseInfiniteQueryOptions<MessageListData, Error, InfiniteData<MessageListData>, readonly unknown[], string | undefined>, 'queryKey' | 'queryFn' | 'getNextPageParam' | 'initialPageParam'>
 ) {
   return useInfiniteQuery({
     queryKey: queryKeys.messages.infinite(chatId),
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
       return await apiClient.getChatMessages(chatId, {
         before: pageParam,
         limit: 20, // Load 20 messages per page
@@ -39,7 +39,7 @@ export function useInfiniteMessages(
       // Return next cursor if there are more messages
       return lastPage.hasMore && lastPage.nextCursor ? lastPage.nextCursor : undefined;
     },
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     enabled: !!chatId,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes

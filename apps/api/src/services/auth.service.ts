@@ -27,6 +27,7 @@ export class AuthService {
         name: data.name,
         email: data.email.toLowerCase(),
         password: hashedPassword,
+        avatar: data.avatar,
       })
       .returning();
 

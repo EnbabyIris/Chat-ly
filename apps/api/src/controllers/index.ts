@@ -4,3 +4,4 @@ export * from './user.controller';
 export * from './chat.controller';
 export * from './group.controller';
 export * from './message.controller';
+export * from './status.controller';

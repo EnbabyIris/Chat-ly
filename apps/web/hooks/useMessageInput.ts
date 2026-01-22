@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useRealTimeMessages } from './use-real-time-messages';
 import { useCloudinaryUpload } from '../lib/cloudinary';
+import { useGroqSuggestions } from './use-groq-suggestions';
 import type { ChatListItem, Message, SendMessageDTO } from '../lib/shared';
 
 // TypeScript declarations for Web Speech API
@@ -64,8 +65,8 @@ const useMessageInput = (
   onTypingStart?: () => void,
   onTypingStop?: () => void
 ) => {
-  // Get real-time messaging functions
-  const { sendTypingStart, sendTypingStop } = useRealTimeMessages({
+  // Get real-time messaging connection status
+  const { isConnected } = useRealTimeMessages({
     selectedChatId: selectedChat?.id,
   });
 
@@ -73,42 +74,24 @@ const useMessageInput = (
   const { uploadImage, isConfigured: isCloudinaryConfigured } = useCloudinaryUpload();
 
   const [newMessage, setNewMessage] = useState('');
-  const [aiMessage, setAiMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Groq AI suggestions with 600ms debounce
+  const { suggestion: aiMessage, isLoading: isAiLoading, error: aiError, clearSuggestion } = useGroqSuggestions(newMessage, {
+    debounceDelay: 600,
+    minChars: 3,
+  });
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const typingHandler = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const previousValue = newMessage;
     const currentValue = e.target.value;
     setNewMessage(currentValue);
-
-    // Handle typing indicators
-    if (previousValue.length === 0 && currentValue.length > 0) {
-      // Started typing
-      sendTypingStart();
-      onTypingStart?.();
-    } else if (previousValue.length > 0 && currentValue.length === 0) {
-      // Stopped typing (cleared input)
-      sendTypingStop();
-      onTypingStop?.();
-    }
-
-    // Simple AI suggestion logic
-    const value = currentValue.toLowerCase();
-    if (value.startsWith('hey') && value.length > 3) {
-      setAiMessage('Hey, how are you doing today?');
-    } else if (value.startsWith('can you') && value.length > 7) {
-      setAiMessage('Can you help me with this task?');
-    } else if (value.startsWith('what time') && value.length > 9) {
-      setAiMessage('What time is the meeting scheduled?');
-    } else {
-      setAiMessage('');
-    }
-  }, [newMessage, onTypingStart, onTypingStop]);
+    // AI suggestions are now handled automatically by useGroqSuggestions hook
+  }, []);
 
   const onKeyDown = useCallback((e: KeyboardEvent | { key: string }) => {
     if (e.key === 'Enter') {
@@ -118,25 +101,31 @@ const useMessageInput = (
       if (newMessage.trim()) {
         sendMessage(newMessage.trim(), 'text');
         setNewMessage('');
-        setAiMessage('');
-        // Stop typing when message is sent
-        sendTypingStop();
+        clearSuggestion();
       }
     } else if (e.key === 'Tab' && aiMessage) {
       if ('preventDefault' in e) {
         e.preventDefault();
       }
-      setNewMessage(aiMessage);
-      setAiMessage('');
+      // Append the completion to the existing message instead of replacing
+      const currentText = newMessage.trim();
+      const completion = aiMessage.trim();
+      const newText = currentText ? `${currentText} ${completion}` : completion;
+      setNewMessage(newText);
+      clearSuggestion();
     }
-  }, [newMessage, aiMessage, sendMessage, sendTypingStop]);
+  }, [newMessage, aiMessage, sendMessage, clearSuggestion]);
 
   const handleAISuggestionClick = useCallback(() => {
     if (aiMessage) {
-      setNewMessage(aiMessage);
-      setAiMessage('');
+      // Append the completion to the existing message
+      const currentText = newMessage.trim();
+      const completion = aiMessage.trim();
+      const newText = currentText ? `${currentText} ${completion}` : completion;
+      setNewMessage(newText);
+      clearSuggestion();
     }
-  }, [aiMessage]);
+  }, [aiMessage, clearSuggestion, newMessage]);
 
   const handleFileUpload = useCallback(() => {
     fileInputRef.current?.click();
@@ -221,30 +210,17 @@ const useMessageInput = (
           const newText = currentText ? `${currentText} ${finalTranscript}` : finalTranscript;
           setNewMessage(newText.trim());
 
-          // Trigger typing indicators if this is new text
-          if (!currentText && finalTranscript.trim()) {
-            sendTypingStart();
-            onTypingStart?.();
-          }
         }
       };
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-
-        // Stop typing indicators on error
-        sendTypingStop();
-        onTypingStop?.();
       };
 
       recognition.onend = () => {
         setIsListening(false);
         console.log('Speech recognition ended');
-
-        // Stop typing indicators when recognition ends
-        sendTypingStop();
-        onTypingStop?.();
       };
 
       // Store recognition instance for cleanup
@@ -260,12 +236,8 @@ const useMessageInput = (
         (window as any).__speechRecognition = null;
       }
       setIsListening(false);
-
-      // Stop typing indicators
-      sendTypingStop();
-      onTypingStop?.();
     }
-  }, [isListening, newMessage, sendTypingStart, sendTypingStop, onTypingStart, onTypingStop]);
+  }, [isListening, newMessage]);
 
   const handleSendLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -336,6 +308,8 @@ const useMessageInput = (
     isListening,
     isGettingLocation,
     isUploading,
+    isAiLoading,
+    aiError,
     inputRef,
     fileInputRef,
     typingHandler,

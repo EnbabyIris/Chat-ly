@@ -1,13 +1,16 @@
 import { FiFile } from "react-icons/fi";
 import { MdLocationOn, MdMic } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MoreVertical } from "lucide-react";
 
 interface MessageActionBarProps {
   aiMessage?: string;
+  currentMessage?: string;
   isListening?: boolean;
   isGettingLocation?: boolean;
+  isAiLoading?: boolean;
+  aiError?: string | null;
   handleAISuggestionClick?: () => void;
   handleFileUpload?: () => void;
   toggleListening?: () => void;
@@ -16,8 +19,11 @@ interface MessageActionBarProps {
 
 const MessageActionBar = ({
   aiMessage = "",
+  currentMessage = "",
   isListening = false,
   isGettingLocation = false,
+  isAiLoading = false,
+  aiError = null,
   handleAISuggestionClick = () => {},
   handleFileUpload = () => {},
   toggleListening = () => {},
@@ -26,8 +32,9 @@ const MessageActionBar = ({
   const [displayText, setDisplayText] = useState(aiMessage);
   const [isRemoving, setIsRemoving] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isTabPressed, setIsTabPressed] = useState(false);
 
-  // Update display text when aiMessage changes
+  // Update display text when aiMessage changes - show completion preview
   React.useEffect(() => {
     if (!aiMessage && displayText) {
       setIsRemoving(true);
@@ -35,13 +42,40 @@ const MessageActionBar = ({
         setDisplayText("");
         setIsRemoving(false);
       }, displayText.length * 10 + 100);
-      
+
       return () => clearTimeout(timer);
     } else if (aiMessage) {
       setIsRemoving(false);
-      setDisplayText(aiMessage);
+      // Show the completion with current message for preview
+      const currentText = currentMessage.trim();
+      const completion = aiMessage.trim();
+      const preview = currentText ? `${currentText} ${completion}` : completion;
+      setDisplayText(preview);
     }
-  }, [aiMessage, displayText]);
+  }, [aiMessage, displayText, currentMessage]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        setIsTabPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        setIsTabPressed(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   return (
     <div className="relative py-1 w-full focus:outline-none outline-none bg-white ">
@@ -135,13 +169,35 @@ const MessageActionBar = ({
           className="text-sm w-full px-2 pr-16 bg-neutral-100 rounded-md text-neutral-400 cursor-pointer min-h-[28px] flex items-center"
         >
           <AnimatePresence mode='popLayout'>
-            {displayText ? (
+            {isAiLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.05 }}
+                className="text-neutral-400"
+              >
+                Getting AI suggestion...
+              </motion.div>
+            ) : aiError ? (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-red-400"
+              >
+                AI suggestion unavailable
+              </motion.div>
+            ) : displayText ? (
               <motion.div
                 key="text"
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.1 }}
-                className="truncate whitespace-nowrap overflow-hidden"
+                className="whitespace-pre-wrap overflow-hidden break-words"
               >
                 {displayText.split("").map((char, index) => (
                   <motion.span
@@ -178,8 +234,11 @@ const MessageActionBar = ({
         </div>
         <div
           style={{
-            boxShadow:
-              "inset 0 1.5px 3px 0 rgba(255, 255, 255, 0.5), 0 2px 3px 0 rgba(0, 0, 0, 0.2)",
+            boxShadow: isTabPressed
+              ? "inset 0 1.5px 3px 0 rgba(255, 255, 255, 0.3), 0 2px 3px 0 rgba(0, 0, 0, 0.1)"
+              : "inset 0 1.5px 3px 0 rgba(255, 255, 255, 0.5), 0 2px 3px 0 rgba(0, 0, 0, 0.2)",
+            transform: isTabPressed ? 'scale(0.95)' : 'scale(1)',
+            transition: 'transform 0.1s ease, box-shadow 0.1s ease'
           }}
           className="absolute bg-white rounded-sm h-fit px-1 right-5 top-1/2 -translate-y-1/2 text-xs flex items-center text-neutral-500 font-medium border border-neutral-200"
         >

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChatHeader } from './chat-header';
 import { MessageList } from './message-list';
 import { EmptyChatState } from './empty-chat-state';
@@ -13,6 +13,7 @@ interface ChatAreaProps {
   onlinePeople: string[];
   onSendMessage: (message: string, chatId?: string, messageType?: 'text' | 'image' | 'file' | 'location', locationData?: { latitude: number; longitude: number; address?: string }) => void;
   onSendFile: (file: File) => void;
+  onStatusClick?: () => void;
 }
 
 export const ChatArea = ({
@@ -22,7 +23,10 @@ export const ChatArea = ({
   onlinePeople,
   onSendMessage,
   onSendFile,
+  onStatusClick,
 }: ChatAreaProps) => {
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+
   // Fetch messages for the selected chat (only if chat is selected)
   const { data: messagesData, isLoading: messagesLoading } = useMessages(
     selectedChat?.id || '',
@@ -32,6 +36,11 @@ export const ChatArea = ({
 
   // Use fetched messages or empty array if loading/no chat selected
   const messages = messagesData?.messages || [];
+
+  // Handle scroll changes from message list
+  const handleScrollChange = (isScrolled: boolean) => {
+    setIsHeaderCollapsed(isScrolled);
+  };
 
   // Handle message sending with chat ID
   const handleSendMessage = (message: string, messageType?: 'text' | 'image' | 'file' | 'location', locationData?: { latitude: number; longitude: number; address?: string }) => {
@@ -55,9 +64,16 @@ export const ChatArea = ({
         selectedChat={selectedChat as any}
         currentUser={currentUser}
         onlinePeople={onlinePeople}
+        isCollapsed={isHeaderCollapsed}
+        onStatusClick={onStatusClick}
       />
 
-      <MessageList messages={messages} currentUser={currentUser} />
+      <MessageList
+        messages={messages}
+        currentUser={currentUser}
+        chatId={selectedChat.id}
+        onScrollChange={handleScrollChange}
+      />
 
       <MessageInput
         selectedChat={selectedChat}

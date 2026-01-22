@@ -1,5 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import { MessageService } from '../../services/message.service';
+import { ChatService } from '../../services/chat.service';
 import { getSocketUser } from '../auth.middleware';
 import type { SendMessageData, MessageData, ReadMessageData } from '../types';
 import { SOCKET_EVENTS } from '@repo/shared/constants';
@@ -7,7 +8,7 @@ import { SOCKET_EVENTS } from '@repo/shared/constants';
 const messageService = new MessageService();
 
 export class MessageHandler {
-  constructor(private io: Server) {}
+  constructor(private io: Server, private chatService: ChatService) {}
 
   /**
    * Register message-related event handlers
@@ -75,7 +76,24 @@ export class MessageHandler {
       // - Broadcast to everyone else via chat room
       socket.emit(SOCKET_EVENTS.MESSAGE_NEW, tempMessage);
       socket.to(chatRoom).emit(SOCKET_EVENTS.MESSAGE_NEW, tempMessage);
-      
+
+      // DUAL BROADCASTING: Also send to each participant's user room
+      // This ensures receivers get the message even if they're not in the chat room yet
+      try {
+        const chat = await this.chatService.getChatById(data.chatId, user.userId);
+        const participantIds = chat.participants.map(p => p.userId).filter(id => id !== user.userId); // Exclude sender
+
+        // Broadcast to each participant's user room
+        for (const participantId of participantIds) {
+          this.io.to(`user:${participantId}`).emit(SOCKET_EVENTS.MESSAGE_NEW, tempMessage);
+        }
+
+        console.log(`📢 Dual broadcast: chat room + ${participantIds.length} user rooms`);
+      } catch (error) {
+        console.error('Failed to dual broadcast message:', error);
+        // Continue with normal flow - chat room broadcast already happened
+      }
+
       console.log(`⚡ INSTANT message broadcast for chat ${data.chatId}`);
 
       // Save to database in background (async, non-blocking)

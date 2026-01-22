@@ -48,4 +48,12 @@ export const queryKeys = {
     detail: (messageId: string) => [...queryKeys.messages.details(), messageId] as const,
   },
 
+  // Status queries
+  statuses: {
+    all: ['statuses'] as const,
+    user: () => [...queryKeys.statuses.all, 'user'] as const,
+    list: (filters?: { userId?: string; limit?: number }) =>
+      [...queryKeys.statuses.all, 'list', filters] as const,
+  },
+
 } as const;

@@ -11,17 +11,17 @@ interface MessageInputProps {
   selectedChat: ChatListItem | null;
   sendMessage: (message: string, messageType?: SendMessageDTO['messageType'], locationData?: { latitude: number; longitude: number; address?: string }) => void;
   sendFile: (file: File) => void;
-  onTypingStart?: () => void;
-  onTypingStop?: () => void;
 }
 
-const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTypingStop }: MessageInputProps) => {
+const MessageInput = ({ selectedChat, sendMessage, sendFile }: MessageInputProps) => {
   const {
     newMessage,
     aiMessage,
     isListening,
     isGettingLocation,
     isUploading,
+    isAiLoading,
+    aiError,
     inputRef,
     fileInputRef,
     typingHandler,
@@ -33,7 +33,7 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
     handleSendLocation,
     getTextarea,
     updateTextareaValue,
-  } = useMessageInput(selectedChat, sendMessage, sendFile, onTypingStart, onTypingStop);
+  } = useMessageInput(selectedChat, sendMessage, sendFile);
 
   // Attach keydown handler and sync textarea value
   useEffect(() => {
@@ -76,10 +76,11 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
        <div
       style={{
         maskImage: 'linear-gradient(to bottom, transparent, transparent , transparent ,red)',
+        pointerEvents: 'none',
       }}
        className="absolute  top-0 z-5 -translate-y-[100.5%]  left-0 w-full h-full  bg-neutral-100" />
       <div
-        className="flex flex-col shadow-[0_0px_3px_0_rgba(0,0,0,0.1)] border-gray-200 items-stretch mb-1 relative border rounded-lg overflow-hidden mt-1"
+        className="flex flex-col shadow-[0_0px_3px_0_rgba(0,0,0,0.1)]  border-gray-200 items-stretch mb-1 relative border rounded-lg overflow-hidden mt-1"
       >
         <input
           ref={fileInputRef}
@@ -91,7 +92,7 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
         />
 
         {/* React Chat Elements Input */}
-        <div className="w-full flex rce-message-input">
+        <div className="w-full flex rce-message-input ">
           <Input
             referance={inputRef}
             placeholder="Enter a message.."
@@ -111,6 +112,9 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
               outline: "none",
               border: "none",
               boxShadow: "none",
+              wordWrap: "break-word",
+              whiteSpace: "pre-wrap",
+              overflowWrap: "break-word",
             }}
           />
         </div>
@@ -118,8 +122,11 @@ const MessageInput = ({ selectedChat, sendMessage, sendFile, onTypingStart, onTy
         {/* AI Assistant Suggestion with Action Buttons */}
         <MessageActionBar
           aiMessage={aiMessage}
+          currentMessage={newMessage}
           isListening={isListening}
           isGettingLocation={isGettingLocation}
+          isAiLoading={isAiLoading}
+          aiError={aiError}
           handleAISuggestionClick={handleAIClick}
           handleFileUpload={handleFileUpload}
           toggleListening={toggleListening}

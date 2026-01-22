@@ -61,8 +61,8 @@ export const config = {
 
   // CORS settings
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true,
+    origin: '*', // Allow all origins - accessible from anywhere in the world
+    credentials: false, // Must be false when using wildcard origin
   },
 
   // Rate limiting

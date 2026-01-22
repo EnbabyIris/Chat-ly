@@ -55,12 +55,13 @@ class ChatTurboServer {
       crossOriginEmbedderPolicy: false, // Allow Socket.IO
     }));
 
-    // CORS configuration
+    // CORS configuration - Allow all origins for global accessibility
     this.app.use(cors({
-      origin: config.cors.origin,
-      credentials: config.cors.credentials,
+      origin: true, // Allow all origins
+      credentials: false, // Must be false when using wildcard origin
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+      optionsSuccessStatus: 200, // Some legacy browsers choke on 204
     }));
 
     // Body parsing middleware
@@ -211,6 +212,11 @@ class ChatTurboServer {
         console.error('❌ Database connection failed. Server cannot start.');
         process.exit(1);
       }
+
+      // Initialize background jobs
+      console.log('🔄 Initializing background jobs...');
+      const { scheduleStatusCleanup } = await import('./jobs/status-cleanup.job');
+      scheduleStatusCleanup();
 
       // Start HTTP server
       this.httpServer.listen(config.server.port, config.server.host, () => {

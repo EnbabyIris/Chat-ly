@@ -190,6 +190,17 @@ a:not([class*="text-"]) {
   .rce-message-input :where(textarea)::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
   }
+
+  /* Make text selection transparent */
+  ::selection {
+    background-color: transparent;
+    color: inherit;
+  }
+
+  ::-moz-selection {
+    background-color: transparent;
+    color: inherit;
+  }
 }
 
 @layer components {

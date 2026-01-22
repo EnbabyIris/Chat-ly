@@ -1,15 +1,32 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MessageBubble } from './message-bubble';
 import type { Message, ChatUser } from '../../lib/shared';
 
 interface MessageListProps {
   messages: Message[];
   currentUser: ChatUser;
+  chatId: string;
+  onScrollChange?: (isScrolled: boolean) => void;
 }
 
-export const MessageList = ({ messages, currentUser }: MessageListProps) => {
+export const MessageList = ({ messages, currentUser, chatId, onScrollChange }: MessageListProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const previousMessageCountRef = useRef(messages.length);
+  const [isScrolledBeyondThreshold, setIsScrolledBeyondThreshold] = useState(false);
+
+  // Scroll detection for header animation
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollTop = container.scrollTop;
+    const shouldCollapse = scrollTop > 20;
+
+    if (shouldCollapse !== isScrolledBeyondThreshold) {
+      setIsScrolledBeyondThreshold(shouldCollapse);
+      onScrollChange?.(shouldCollapse);
+    }
+  }, [isScrolledBeyondThreshold, onScrollChange]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -20,14 +37,23 @@ export const MessageList = ({ messages, currentUser }: MessageListProps) => {
     if (messages.length > previousMessageCountRef.current) {
       // Check if user was near bottom before scrolling
       const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
-      
+
       if (isNearBottom) {
         container.scrollTop = container.scrollHeight;
       }
     }
-    
+
     previousMessageCountRef.current = messages.length;
   }, [messages.length]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   console.log(messages);
 
@@ -42,6 +68,7 @@ export const MessageList = ({ messages, currentUser }: MessageListProps) => {
           key={message.id}
           message={message}
           currentUser={currentUser}
+          chatId={chatId}
         />
       ))}
     </div>

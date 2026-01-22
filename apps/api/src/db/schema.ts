@@ -128,6 +128,23 @@ export const refreshTokens = pgTable('refresh_tokens', {
   revokedIdx: index('refresh_tokens_revoked_idx').on(table.isRevoked),
 }));
 
+// ================================
+// STATUS TABLE (WhatsApp-style temporary status updates)
+// ================================
+export const statuses = pgTable('statuses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  content: text('content'), // optional text content
+  imageUrl: text('image_url'), // optional image URL for status media
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(), // created_at + 24 hours
+}, (table) => ({
+  // Performance indexes
+  userStatusesIdx: index('statuses_user_statuses_idx').on(table.userId, table.createdAt),
+  expiresAtIdx: index('statuses_expires_at_idx').on(table.expiresAt),
+  createdAtIdx: index('statuses_created_at_idx').on(table.createdAt),
+}));
+
 
 // ================================
 // RELATIONS DEFINITIONS
@@ -140,6 +157,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   refreshTokens: many(refreshTokens),
   messageReadReceipts: many(messageReadReceipts),
   adminOfChats: many(chats, { relationName: 'chatAdmin' }),
+  statuses: many(statuses), // user can have multiple statuses
 }));
 
 // Chats relations
@@ -200,6 +218,14 @@ export const messageReadReceiptsRelations = relations(messageReadReceipts, ({ on
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   user: one(users, {
     fields: [refreshTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+// Status relations
+export const statusesRelations = relations(statuses, ({ one }) => ({
+  user: one(users, {
+    fields: [statuses.userId],
     references: [users.id],
   }),
 }));

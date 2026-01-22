@@ -6,6 +6,7 @@ import { ChatArea } from '@/components/chat/chat-area';
 import { FloatingHeader } from '@/components/layouts/floating-header';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { CreateGroupDialog } from '@/components/features/create-group-dialog';
+import { StatusDialog } from '@/components/features/status-dialog';
 import { useChatData } from '@/hooks/use-chat-data';
 import { useChatFilters } from '@/hooks/use-chat-filters';
 import { useChatActions } from '@/hooks/use-chat-actions';
@@ -13,6 +14,7 @@ import { useRealTimeMessages } from '@/hooks/use-real-time-messages';
 import { useAuth } from '@/contexts/auth-context';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { useOnlineStatus } from '@/hooks/use-online-status';
+import { useUserStatusesById } from '@/lib/api/queries/status.queries';
 import { getErrorMessage } from '@/lib/utils/error-messages';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ChatListItem, ActiveTab } from '../../lib/shared';
@@ -21,10 +23,15 @@ function ChatsPageContent() {
   const [selectedChat, setSelectedChat] = useState<ChatListItem | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('chats');
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const { user } = useAuth();
   const { isOffline } = useNetworkStatus();
   const { onlineUsers } = useOnlineStatus();
   const queryClient = useQueryClient();
+
+  // Get statuses for the other user in the selected chat
+  const otherUserId = selectedChat?.participants?.find(p => p.id !== user?.id)?.id;
+  const { data: userStatuses } = useUserStatusesById(otherUserId || '');
 
   // Get data from custom hooks
   const { users, chats, currentUser, onlinePeople, isLoading, error } = useChatData();
@@ -59,6 +66,11 @@ function ChatsPageContent() {
     selectedChatId: selectedChat?.id,
     currentUserId: activeCurrentUser._id,
   });
+
+  // Handle status dialog
+  const handleStatusClick = useCallback(() => {
+    setIsStatusDialogOpen(true);
+  }, []);
 
   // Handle successful group creation
   const handleGroupCreated = useCallback((chat: any) => {
@@ -173,6 +185,7 @@ function ChatsPageContent() {
           onlinePeople={onlinePeople}
           onSendMessage={handleSendMessage}
           onSendFile={handleSendFile}
+          onStatusClick={handleStatusClick}
         />
       </div>
 
@@ -182,6 +195,16 @@ function ChatsPageContent() {
         onClose={() => setIsCreateGroupDialogOpen(false)}
         onSuccess={handleGroupCreated}
       />
+
+      {/* Status Dialog */}
+      {selectedChat && userStatuses && (
+        <StatusDialog
+          isOpen={isStatusDialogOpen}
+          onClose={() => setIsStatusDialogOpen(false)}
+          statuses={userStatuses.statuses}
+          userName={selectedChat.participants?.find(p => p.id !== user?.id)?.name || 'User'}
+        />
+      )}
     </div>
   );
 }
