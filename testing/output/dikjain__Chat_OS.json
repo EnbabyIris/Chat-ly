@@ -14,8 +14,10 @@
     "test_loc": 7877,
     "languages": {
       "TypeScript": 211,
+
       "Python": 16,
       "JavaScript": 15
+
     },
     "primary_language": "TypeScript",
     "has_ci_cd": true,
@@ -33,11 +35,13 @@
     "commits_referencing_issues": 10,
     "test_coverage_percentage": null,
     "swebench_readiness_score": 88.6,
+
     "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
     "strengths": [],
     "weaknesses": [],
     "commit_spread_days": 52.6,
     "median_commit_interval_hours": 0.11
+
   },
   "pr_analysis": {
     "total_prs": 5,
