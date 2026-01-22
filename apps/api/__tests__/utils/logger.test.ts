@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 
-describe('MessageService', () => {
+describe('Logger', () => {
   it('should initialize correctly', () => {
     expect(true).toBe(true);
   });

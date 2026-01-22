@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 
-describe('MessageService', () => {
+describe('AuthMiddleware', () => {
   it('should initialize correctly', () => {
     expect(true).toBe(true);
   });
