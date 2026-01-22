@@ -28,8 +28,8 @@
       "vitest"
     ],
     "has_test_runner": true,
-    "total_commits": 29,
-    "recent_commits_12mo": 29,
+    "total_commits": 30,
+    "recent_commits_12mo": 30,
     "commits_referencing_issues": 4,
     "test_coverage_percentage": null,
     "swebench_readiness_score": 83.0,
@@ -37,7 +37,7 @@
     "strengths": [],
     "weaknesses": [],
     "commit_spread_days": 52.6,
-    "median_commit_interval_hours": 0.11
+    "median_commit_interval_hours": 0.08
   },
   "pr_analysis": {
     "total_prs": 0,
