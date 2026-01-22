@@ -1,21 +1,21 @@
 {
   "repo_name": "Chat_OS",
   "repo_full_name": "dikjain/Chat_OS",
-  "overall_score": 40.74,
+  "overall_score": 42.66,
   "recommendation": "\u26a0\ufe0f FAIR",
   "repo_metrics": {
     "repo_name": "chat-turbo",
-    "total_files": 279,
-    "test_files": 16,
-    "test_file_ratio": 0.05734767025089606,
-    "source_files": 188,
-    "total_loc": 25009,
-    "source_loc": 18344,
-    "test_loc": 6665,
+    "total_files": 307,
+    "test_files": 20,
+    "test_file_ratio": 0.06514657980456026,
+    "source_files": 194,
+    "total_loc": 26416,
+    "source_loc": 19510,
+    "test_loc": 6906,
     "languages": {
-      "TypeScript": 189,
+      "TypeScript": 200,
       "Python": 16,
-      "JavaScript": 11
+      "JavaScript": 15
     },
     "primary_language": "TypeScript",
     "has_ci_cd": true,
@@ -28,16 +28,16 @@
       "vitest"
     ],
     "has_test_runner": true,
-    "total_commits": 21,
-    "recent_commits_12mo": 21,
+    "total_commits": 22,
+    "recent_commits_12mo": 22,
     "commits_referencing_issues": 0,
     "test_coverage_percentage": null,
-    "swebench_readiness_score": 67.9,
-    "recommendation": "\u2705 GOOD - Suitable for SWE-Bench+ samples with some limitations",
+    "swebench_readiness_score": 71.1,
+    "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
     "strengths": [],
     "weaknesses": [],
     "commit_spread_days": 52.5,
-    "median_commit_interval_hours": 0.12
+    "median_commit_interval_hours": 0.15
   },
   "pr_analysis": {
     "total_prs": 0,

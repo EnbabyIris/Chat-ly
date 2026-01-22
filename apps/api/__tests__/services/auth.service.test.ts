@@ -4,6 +4,7 @@ import { hashPassword, comparePassword } from '../../src/utils/password'
 import { generateAccessToken, generateRefreshToken } from '../../src/utils/jwt'
 import { ConflictError, UnauthorizedError } from '../../src/utils/errors'
 import { ERROR_MESSAGES } from '@repo/shared/constants'
+import { createMockUser, setupTestEnvironment, cleanupTestEnvironment } from '../../src/utils/test-utils'
 
 // Mock dependencies
 jest.mock('../../src/db')
@@ -27,8 +28,12 @@ describe('AuthService', () => {
   let authService: AuthService
 
   beforeEach(() => {
+    setupTestEnvironment()
     authService = new AuthService()
-    jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    cleanupTestEnvironment()
   })
 
   describe('register', () => {
