@@ -7,18 +7,12 @@ import { chatMessagesRoutes } from './chat-messages.routes';
 import { groupRoutes } from './group.routes';
 import { statusRoutes } from './status.routes';
 import { errorHandler, notFoundHandler } from '../middleware/error-handler';
+import healthRoutes from './health.routes';
 
 const router = Router();
 
-// Health check endpoint
-router.get('/health', (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Chat-Turbo API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+// Health and monitoring routes
+router.use('/', healthRoutes);
 
 // API version prefix
 const API_VERSION = '/api/v1';

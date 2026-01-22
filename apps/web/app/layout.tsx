@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import { Inter, Saira } from "next/font/google";
 import localFont from "next/font/local";
-import { AuthProvider } from "@/contexts/auth-context";
-import { SocketProvider } from "@/contexts/socket-context";
+import { lazy, Suspense } from "react";
 import { QueryProvider } from "@/lib/providers/query-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
+
+// Lazy load providers to reduce initial bundle size
+const AuthProvider = lazy(() => import("@/contexts/auth-context").then(mod => ({ default: mod.AuthProvider })));
+const SocketProvider = lazy(() => import("@/contexts/socket-context").then(mod => ({ default: mod.SocketProvider })));
+
+// Loading fallback for providers
+const ProviderFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,13 +57,19 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${saira.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>
-          <AuthProvider>
-            <SocketProvider>
-              {children}
-            </SocketProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ErrorBoundary>
+          <QueryProvider>
+            <Suspense fallback={<ProviderFallback />}>
+              <AuthProvider>
+                <Suspense fallback={<ProviderFallback />}>
+                  <SocketProvider>
+                    {children}
+                  </SocketProvider>
+                </Suspense>
+              </AuthProvider>
+            </Suspense>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chat-turbo
+  labels:
+    name: chat-turbo
+    app: chat-turbo

@@ -8,6 +8,15 @@ import { apiRoutes } from './routes';
 import { createSocketIOServer } from './socket';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { rateLimiter } from './middleware/rate-limiter';
+import {
+  sanitizeInput,
+  securityHeaders,
+  apiVersioning,
+  requestTimeout,
+  sqlInjectionProtection,
+  securityLogger
+} from './middleware/security';
+import { logger } from './utils/logger';
 
 /**
  * Chat-Turbo API Server
@@ -64,9 +73,17 @@ class ChatTurboServer {
       optionsSuccessStatus: 200, // Some legacy browsers choke on 204
     }));
 
-    // Body parsing middleware
+    // Body parsing middleware with size limits
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Security middleware (applied before business logic)
+    this.app.use(securityHeaders);
+    this.app.use(apiVersioning);
+    this.app.use(securityLogger);
+    this.app.use(sanitizeInput);
+    this.app.use(sqlInjectionProtection);
+    this.app.use(requestTimeout(30000)); // 30 second timeout
 
     // Global rate limiting
     this.app.use(rateLimiter({
@@ -74,13 +91,8 @@ class ChatTurboServer {
       maxRequests: config.rateLimit.maxRequests,
     }));
 
-    // Request logging in development
-    if (isDevelopment()) {
-      this.app.use((req, _res, next) => {
-        console.log(`📝 ${req.method} ${req.path} - ${new Date().toISOString()}`);
-        next();
-      });
-    }
+    // Request logging
+    this.app.use(logger.requestLogger());
 
     // Add request timestamp
     this.app.use((req, _res, next) => {
@@ -163,7 +175,7 @@ class ChatTurboServer {
    */
   private setupGracefulShutdown(): void {
     const gracefulShutdown = async (signal: string) => {
-      console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+      logger.info(`Received ${signal}. Starting graceful shutdown`);
 
       try {
         // Close Socket.IO server
@@ -172,23 +184,23 @@ class ChatTurboServer {
         // Close HTTP server
         this.httpServer.close((err) => {
           if (err) {
-            console.error('❌ Error closing HTTP server:', err);
+            logger.error('Error closing HTTP server', {}, err);
             process.exit(1);
           }
 
-          console.log('✅ HTTP server closed');
-          console.log('✅ Graceful shutdown completed');
+          logger.info('HTTP server closed successfully');
+          logger.info('Graceful shutdown completed');
           process.exit(0);
         });
 
         // Force exit after 10 seconds
         setTimeout(() => {
-          console.error('❌ Forced shutdown after timeout');
+          logger.error('Forced shutdown after timeout');
           process.exit(1);
         }, 10000);
 
       } catch (error) {
-        console.error('❌ Error during graceful shutdown:', error);
+        logger.error('Error during graceful shutdown', {}, error as Error);
         process.exit(1);
       }
     };
@@ -205,44 +217,43 @@ class ChatTurboServer {
   async start(): Promise<void> {
     try {
       // Test database connection
-      console.log('🔍 Testing database connection...');
+      logger.info('Testing database connection');
       const dbConnected = await testConnection();
-      
+
       if (!dbConnected) {
-        console.error('❌ Database connection failed. Server cannot start.');
+        logger.error('Database connection failed. Server cannot start');
         process.exit(1);
       }
 
       // Initialize background jobs
-      console.log('🔄 Initializing background jobs...');
+      logger.info('Initializing background jobs');
       const { scheduleStatusCleanup } = await import('./jobs/status-cleanup.job');
       scheduleStatusCleanup();
 
       // Start HTTP server
       this.httpServer.listen(config.server.port, config.server.host, () => {
-        console.log('\n🚀 Chat-Turbo API Server Started!');
-        console.log('================================');
-        console.log(`📡 Server: http://${config.server.host}:${config.server.port}`);
-        console.log(`🌐 Environment: ${config.server.nodeEnv}`);
-        console.log(`🔗 Frontend URL: ${config.cors.origin}`);
-        console.log(`💾 Database: Connected`);
-        console.log(`🔌 Socket.IO: Enabled`);
-        console.log('================================');
-        
+        logger.info('Chat-Turbo API Server Started', {
+          server: `http://${config.server.host}:${config.server.port}`,
+          environment: config.server.nodeEnv,
+          frontendUrl: config.cors.origin,
+          database: 'Connected',
+          socketIO: 'Enabled',
+        });
+
         if (isDevelopment()) {
-          console.log('\n📋 Available Endpoints:');
-          console.log('  GET  /                    - Server info');
-          console.log('  GET  /health              - Health check');
-          console.log('  GET  /api/v1              - API documentation');
-          console.log('  GET  /socket-stats        - Socket.IO statistics');
-          console.log('\n🔐 Authentication:');
-          console.log('  POST /api/v1/auth/register - Register user');
-          console.log('  POST /api/v1/auth/login    - Login user');
-          console.log('  POST /api/v1/auth/refresh  - Refresh token');
-          console.log('\n💬 Real-time Features:');
-          console.log('  Socket.IO endpoint available for real-time messaging');
-          console.log('  Connect with JWT token for authentication');
-          console.log('\n📖 Documentation: http://localhost:5000/api/v1');
+          logger.info('Development server endpoints available', {
+            endpoints: {
+              root: '/',
+              health: '/health',
+              'socket-stats': '/socket-stats',
+              auth: {
+                register: 'POST /api/v1/auth/register',
+                login: 'POST /api/v1/auth/login',
+                refresh: 'POST /api/v1/auth/refresh',
+              },
+            },
+            documentation: 'http://localhost:5000/api/v1',
+          });
         }
       });
 

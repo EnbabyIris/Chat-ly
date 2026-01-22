@@ -7,6 +7,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
     "start": "node apps/api/dist/server.js"
   },
   "devDependencies": {
@@ -16,6 +19,6 @@
   },
   "packageManager": "pnpm@9.1.0",
   "engines": {
-    "node": "20.x"
+    "node": ">=20.x"
   }
 }
