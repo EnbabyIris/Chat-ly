@@ -859,7 +859,9 @@ class RepoAnalyzer:
                     cwd=self.repo_path,
                     capture_output=True,
                     text=True,
-                    timeout=30
+                    timeout=30,
+                    encoding='utf-8',
+                    errors='ignore'
                 )
                 if result.returncode == 0:
                     file_paths = [f.strip() for f in result.stdout.strip().split('\n') if f.strip()]
@@ -1311,7 +1313,9 @@ class RepoAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                encoding='utf-8',
+                errors='ignore'
             )
             if result.returncode == 0:
                 metrics['total_commits'] = int(result.stdout.strip())
@@ -1321,7 +1325,9 @@ class RepoAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                encoding='utf-8',
+                errors='ignore'
             )
             if result.returncode == 0:
                 metrics['recent_commits_12mo'] = int(result.stdout.strip())
@@ -1331,7 +1337,9 @@ class RepoAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                encoding='utf-8',
+                errors='ignore'
             )
             if result.returncode == 0:
                 metrics['commits_referencing_issues'] = len(
@@ -1344,7 +1352,9 @@ class RepoAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
+                encoding='utf-8',
+                errors='ignore'
             )
             if all_ts_result.returncode == 0 and all_ts_result.stdout.strip():
                 all_timestamps = [int(ts) for ts in all_ts_result.stdout.strip().split('\n') if ts]
@@ -1360,7 +1370,9 @@ class RepoAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                encoding='utf-8',
+                errors='ignore'
             )
             if result.returncode == 0 and result.stdout.strip():
                 timestamps = [int(ts) for ts in result.stdout.strip().split('\n') if ts]
@@ -1414,7 +1426,9 @@ class PRAnalyzer:
             cwd=self.repo_path,
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            encoding='utf-8',
+            errors='ignore'
         )
         return check.returncode == 0
 
@@ -1426,7 +1440,9 @@ class PRAnalyzer:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
+                encoding='utf-8',
+                errors='ignore'
             )
             return result.returncode == 0
         except Exception as e:
@@ -1451,7 +1467,9 @@ class PRAnalyzer:
                     cwd=self.repo_path,
                     capture_output=True,
                     text=True,
-                    timeout=60
+                    timeout=60,
+                    encoding='utf-8',
+                    errors='ignore'
                 )
                 if result.returncode == 0 and result.stdout:
                     return result.stdout
@@ -2088,6 +2106,8 @@ def clone_repo(repo_full_name: str, temp_dir: Path, token: str, platform: str = 
         capture_output=True,
         text=True,
         timeout=300,
+        encoding='utf-8',
+        errors='ignore'
     )
 
     if result.returncode != 0:
