@@ -16,6 +16,7 @@
       "TypeScript": 213,
       "Python": 16,
       "JavaScript": 15
+
     },
     "primary_language": "TypeScript",
     "has_ci_cd": true,
@@ -33,11 +34,17 @@
     "commits_referencing_issues": 7,
     "test_coverage_percentage": null,
     "swebench_readiness_score": 89.7,
+    "total_commits": 30,
+    "recent_commits_12mo": 30,
+    "commits_referencing_issues": 4,
+    "test_coverage_percentage": null,
+    "swebench_readiness_score": 83.0,
     "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
     "strengths": [],
     "weaknesses": [],
     "commit_spread_days": 52.6,
     "median_commit_interval_hours": 0.14
+
   },
   "pr_analysis": {
     "total_prs": 0,
