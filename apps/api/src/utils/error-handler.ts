@@ -1,377 +1,290 @@
-export interface ErrorDetails {
-  code: string
-  message: string
-  statusCode: number
-  timestamp: number
-  requestId?: string
-  userId?: string
-  stack?: string
-  context?: Record<string, any>
+/**
+ * Comprehensive Error Handling System
+ * Centralized error management, logging, and recovery
+ */
+
+export interface ErrorContext {
+  userId?: string;
+  requestId?: string;
+  endpoint?: string;
+  timestamp: number;
+  userAgent?: string;
+  ip?: string;
 }
 
-export interface ErrorLog {
-  id: string
-  error: ErrorDetails
-  resolved: boolean
-  resolvedAt?: number
-  resolvedBy?: string
-  notes?: string
+export interface ErrorDetails {
+  code: string;
+  message: string;
+  statusCode: number;
+  context?: ErrorContext;
+  stack?: string;
+  cause?: Error;
+  retryable?: boolean;
+}
+
+export class AppError extends Error {
+  public readonly code: string;
+  public readonly statusCode: number;
+  public readonly context?: ErrorContext;
+  public readonly retryable: boolean;
+
+  constructor(details: ErrorDetails) {
+    super(details.message);
+    this.name = 'AppError';
+    this.code = details.code;
+    this.statusCode = details.statusCode;
+    this.context = details.context;
+    this.retryable = details.retryable || false;
+
+    if (details.stack) {
+      this.stack = details.stack;
+    }
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      statusCode: this.statusCode,
+      context: this.context,
+      retryable: this.retryable,
+      timestamp: Date.now()
+    };
+  }
 }
 
 export class ErrorHandler {
-  private static errorLogs: ErrorLog[] = []
-  private static readonly MAX_LOGS = 1000
+  private static instance: ErrorHandler;
+  private errorCallbacks: Map<string, Function[]> = new Map();
+  private errorCounts: Map<string, number> = new Map();
 
-  /**
-   * Creates a standardized error with proper logging
-   */
-  static createError(
-    code: string,
-    message: string,
-    statusCode: number = 500,
-    context?: Record<string, any>
-  ): ErrorDetails {
-    const error: ErrorDetails = {
-      code,
-      message,
-      statusCode,
-      timestamp: Date.now(),
-      context,
+  static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler();
     }
-
-    // Log the error
-    this.logError(error)
-
-    return error
+    return ErrorHandler.instance;
   }
 
   /**
-   * Logs error with automatic categorization
+   * Handle an error with context
    */
-  static logError(error: ErrorDetails, requestId?: string, userId?: string): void {
-    const enhancedError: ErrorDetails = {
-      ...error,
-      requestId,
-      userId,
-      stack: new Error().stack,
-    }
+  handle(error: Error | AppError, context?: ErrorContext): AppError {
+    const appError = this.normalizeError(error, context);
+    
+    this.incrementErrorCount(appError.code);
+    this.logError(appError);
+    this.notifyCallbacks(appError);
 
-    const errorLog: ErrorLog = {
-      id: this.generateErrorId(),
-      error: enhancedError,
-      resolved: false,
-    }
-
-    this.errorLogs.push(errorLog)
-    this.cleanupOldLogs()
-
-    // Auto-categorize and handle based on severity
-    this.handleErrorBySeverity(enhancedError)
+    return appError;
   }
 
   /**
-   * Handles different types of application errors
+   * Register error callback
    */
-  static handleApplicationError(error: Error, context?: Record<string, any>): ErrorDetails {
-    let errorCode = 'UNKNOWN_ERROR'
-    let statusCode = 500
-    let message = error.message || 'An unexpected error occurred'
-
-    // Categorize common error types
-    if (error.name === 'ValidationError') {
-      errorCode = 'VALIDATION_ERROR'
-      statusCode = 400
-    } else if (error.name === 'UnauthorizedError') {
-      errorCode = 'UNAUTHORIZED'
-      statusCode = 401
-    } else if (error.name === 'ForbiddenError') {
-      errorCode = 'FORBIDDEN'
-      statusCode = 403
-    } else if (error.name === 'NotFoundError') {
-      errorCode = 'NOT_FOUND'
-      statusCode = 404
-    } else if (error.name === 'ConflictError') {
-      errorCode = 'CONFLICT'
-      statusCode = 409
-    } else if (error.name === 'RateLimitError') {
-      errorCode = 'RATE_LIMIT_EXCEEDED'
-      statusCode = 429
-    } else if (error.message.includes('database')) {
-      errorCode = 'DATABASE_ERROR'
-      statusCode = 500
-    } else if (error.message.includes('network') || error.message.includes('timeout')) {
-      errorCode = 'NETWORK_ERROR'
-      statusCode = 503
+  onError(errorCode: string, callback: (error: AppError) => void): void {
+    if (!this.errorCallbacks.has(errorCode)) {
+      this.errorCallbacks.set(errorCode, []);
     }
-
-    return this.createError(errorCode, message, statusCode, {
-      ...context,
-      originalError: error.name,
-      stack: error.stack,
-    })
+    this.errorCallbacks.get(errorCode)!.push(callback);
   }
 
   /**
-   * Handles database-specific errors
+   * Get error statistics
    */
-  static handleDatabaseError(error: Error, query?: string): ErrorDetails {
-    let errorCode = 'DATABASE_ERROR'
-    let message = 'Database operation failed'
-    let statusCode = 500
+  getErrorStats(): Record<string, number> {
+    return Object.fromEntries(this.errorCounts);
+  }
 
-    // Categorize database errors
-    if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-      errorCode = 'DUPLICATE_ENTRY'
-      message = 'Resource already exists'
-      statusCode = 409
-    } else if (error.message.includes('foreign key')) {
-      errorCode = 'FOREIGN_KEY_VIOLATION'
-      message = 'Referenced resource does not exist'
-      statusCode = 400
-    } else if (error.message.includes('connection')) {
-      errorCode = 'DATABASE_CONNECTION_ERROR'
-      message = 'Database connection failed'
-      statusCode = 503
-    } else if (error.message.includes('timeout')) {
-      errorCode = 'DATABASE_TIMEOUT'
-      message = 'Database operation timed out'
-      statusCode = 504
+  /**
+   * Clear error statistics
+   */
+  clearStats(): void {
+    this.errorCounts.clear();
+  }
+
+  /**
+   * Check if error is retryable
+   */
+  isRetryable(error: Error | AppError): boolean {
+    if (error instanceof AppError) {
+      return error.retryable;
     }
+    
+    // Default retry logic for common errors
+    const retryablePatterns = [
+      /timeout/i,
+      /connection/i,
+      /network/i,
+      /502/,
+      /503/,
+      /504/
+    ];
 
-    return this.createError(errorCode, message, statusCode, {
-      query,
-      originalError: error.message,
-      stack: error.stack,
-    })
+    return retryablePatterns.some(pattern => 
+      pattern.test(error.message) || pattern.test(error.name)
+    );
   }
 
   /**
-   * Handles authentication and authorization errors
+   * Create circuit breaker for error handling
    */
-  static handleAuthError(type: 'invalid_token' | 'expired_token' | 'missing_token' | 'insufficient_permissions'): ErrorDetails {
-    const authErrors = {
-      invalid_token: {
-        code: 'INVALID_TOKEN',
-        message: 'Invalid authentication token',
-        statusCode: 401,
-      },
-      expired_token: {
-        code: 'EXPIRED_TOKEN',
-        message: 'Authentication token has expired',
-        statusCode: 401,
-      },
-      missing_token: {
-        code: 'MISSING_TOKEN',
-        message: 'Authentication token is required',
-        statusCode: 401,
-      },
-      insufficient_permissions: {
-        code: 'INSUFFICIENT_PERMISSIONS',
-        message: 'Insufficient permissions for this action',
-        statusCode: 403,
-      },
-    }
-
-    const errorConfig = authErrors[type]
-    return this.createError(errorConfig.code, errorConfig.message, errorConfig.statusCode)
-  }
-
-  /**
-   * Handles validation errors with detailed field information
-   */
-  static handleValidationError(fields: Record<string, string[]>): ErrorDetails {
-    const fieldErrors = Object.entries(fields)
-      .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
-      .join('; ')
-
-    return this.createError(
-      'VALIDATION_ERROR',
-      `Validation failed: ${fieldErrors}`,
-      400,
-      { fields }
-    )
-  }
-
-  /**
-   * Gets error statistics and trends
-   */
-  static getErrorStatistics(timeWindow: number = 3600000): {
-    totalErrors: number
-    errorsByCode: Record<string, number>
-    errorsByStatusCode: Record<number, number>
-    criticalErrors: number
-    resolvedErrors: number
-    averageResolutionTime: number
-  } {
-    const cutoff = Date.now() - timeWindow
-    const recentErrors = this.errorLogs.filter(log => log.error.timestamp >= cutoff)
-
-    const errorsByCode: Record<string, number> = {}
-    const errorsByStatusCode: Record<number, number> = {}
-    let criticalErrors = 0
-    let resolvedErrors = 0
-    let totalResolutionTime = 0
-
-    recentErrors.forEach(log => {
-      // Count by error code
-      errorsByCode[log.error.code] = (errorsByCode[log.error.code] || 0) + 1
-
-      // Count by status code
-      errorsByStatusCode[log.error.statusCode] = (errorsByStatusCode[log.error.statusCode] || 0) + 1
-
-      // Count critical errors (5xx status codes)
-      if (log.error.statusCode >= 500) {
-        criticalErrors++
-      }
-
-      // Count resolved errors and calculate resolution time
-      if (log.resolved && log.resolvedAt) {
-        resolvedErrors++
-        totalResolutionTime += log.resolvedAt - log.error.timestamp
-      }
-    })
-
-    const averageResolutionTime = resolvedErrors > 0 ? totalResolutionTime / resolvedErrors : 0
+  createCircuitBreaker(
+    errorThreshold: number = 5,
+    resetTimeout: number = 60000
+  ) {
+    let failureCount = 0;
+    let lastFailureTime = 0;
+    let state: 'closed' | 'open' | 'half-open' = 'closed';
 
     return {
-      totalErrors: recentErrors.length,
-      errorsByCode,
-      errorsByStatusCode,
-      criticalErrors,
-      resolvedErrors,
-      averageResolutionTime,
-    }
+      execute: async <T>(fn: () => Promise<T>): Promise<T> => {
+        const now = Date.now();
+        
+        if (state === 'open') {
+          if (now - lastFailureTime > resetTimeout) {
+            state = 'half-open';
+          } else {
+            throw new AppError({
+              code: 'CIRCUIT_BREAKER_OPEN',
+              message: 'Circuit breaker is open',
+              statusCode: 503,
+              retryable: true
+            });
+          }
+        }
+
+        try {
+          const result = await fn();
+          
+          if (state === 'half-open') {
+            state = 'closed';
+            failureCount = 0;
+          }
+          
+          return result;
+        } catch (error) {
+          failureCount++;
+          lastFailureTime = now;
+          
+          if (failureCount >= errorThreshold) {
+            state = 'open';
+          }
+          
+          throw error;
+        }
+      },
+      getState: () => ({ state, failureCount, lastFailureTime })
+    };
   }
 
-  /**
-   * Gets unresolved critical errors
-   */
-  static getCriticalErrors(): ErrorLog[] {
-    return this.errorLogs.filter(log => 
-      !log.resolved && log.error.statusCode >= 500
-    ).sort((a, b) => b.error.timestamp - a.error.timestamp)
-  }
-
-  /**
-   * Marks an error as resolved
-   */
-  static resolveError(errorId: string, resolvedBy: string, notes?: string): boolean {
-    const errorLog = this.errorLogs.find(log => log.id === errorId)
-    
-    if (!errorLog) {
-      return false
+  private normalizeError(error: Error | AppError, context?: ErrorContext): AppError {
+    if (error instanceof AppError) {
+      return error;
     }
 
-    errorLog.resolved = true
-    errorLog.resolvedAt = Date.now()
-    errorLog.resolvedBy = resolvedBy
-    errorLog.notes = notes
+    let statusCode = 500;
+    let code = 'INTERNAL_ERROR';
+    let retryable = false;
 
-    return true
-  }
-
-  /**
-   * Gets error trends for monitoring
-   */
-  static getErrorTrends(hours: number = 24): Array<{
-    hour: number
-    errorCount: number
-    criticalCount: number
-  }> {
-    const trends: Array<{ hour: number; errorCount: number; criticalCount: number }> = []
-    const now = Date.now()
-    const hourMs = 3600000
-
-    for (let i = hours - 1; i >= 0; i--) {
-      const hourStart = now - (i * hourMs)
-      const hourEnd = hourStart + hourMs
-
-      const hourErrors = this.errorLogs.filter(log => 
-        log.error.timestamp >= hourStart && log.error.timestamp < hourEnd
-      )
-
-      const criticalCount = hourErrors.filter(log => log.error.statusCode >= 500).length
-
-      trends.push({
-        hour: Math.floor(hourStart / hourMs),
-        errorCount: hourErrors.length,
-        criticalCount,
-      })
+    // Map common error patterns
+    if (error.message.includes('validation')) {
+      statusCode = 400;
+      code = 'VALIDATION_ERROR';
+    } else if (error.message.includes('unauthorized')) {
+      statusCode = 401;
+      code = 'UNAUTHORIZED';
+    } else if (error.message.includes('forbidden')) {
+      statusCode = 403;
+      code = 'FORBIDDEN';
+    } else if (error.message.includes('not found')) {
+      statusCode = 404;
+      code = 'NOT_FOUND';
+    } else if (error.message.includes('timeout')) {
+      statusCode = 408;
+      code = 'TIMEOUT';
+      retryable = true;
+    } else if (error.message.includes('rate limit')) {
+      statusCode = 429;
+      code = 'RATE_LIMITED';
+      retryable = true;
     }
 
-    return trends
-  }
-
-  /**
-   * Handles errors based on severity level
-   */
-  private static handleErrorBySeverity(error: ErrorDetails): void {
-    // Critical errors (5xx) - immediate attention needed
-    if (error.statusCode >= 500) {
-      this.handleCriticalError(error)
-    }
-    // Client errors (4xx) - log for analysis
-    else if (error.statusCode >= 400) {
-      this.handleClientError(error)
-    }
-  }
-
-  /**
-   * Handles critical errors with alerting
-   */
-  private static handleCriticalError(error: ErrorDetails): void {
-    // In a real implementation, this would:
-    // - Send alerts to monitoring systems
-    // - Notify on-call engineers
-    // - Create incident tickets
-    console.error('CRITICAL ERROR:', {
-      code: error.code,
+    return new AppError({
+      code,
       message: error.message,
-      timestamp: new Date(error.timestamp).toISOString(),
-      context: error.context,
-    })
+      statusCode,
+      context,
+      stack: error.stack,
+      cause: error,
+      retryable
+    });
   }
 
-  /**
-   * Handles client errors for analysis
-   */
-  private static handleClientError(error: ErrorDetails): void {
-    // Log client errors for pattern analysis
-    console.warn('CLIENT ERROR:', {
+  private incrementErrorCount(code: string): void {
+    const current = this.errorCounts.get(code) || 0;
+    this.errorCounts.set(code, current + 1);
+  }
+
+  private logError(error: AppError): void {
+    const logData = {
+      timestamp: new Date().toISOString(),
+      level: error.statusCode >= 500 ? 'error' : 'warn',
       code: error.code,
       message: error.message,
       statusCode: error.statusCode,
-      userId: error.userId,
-    })
+      context: error.context,
+      stack: error.statusCode >= 500 ? error.stack : undefined
+    };
+
+    console.error('[ErrorHandler]', JSON.stringify(logData));
   }
 
-  /**
-   * Generates unique error ID
-   */
-  private static generateErrorId(): string {
-    return `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  /**
-   * Cleans up old error logs to prevent memory leaks
-   */
-  private static cleanupOldLogs(): void {
-    if (this.errorLogs.length > this.MAX_LOGS) {
-      this.errorLogs = this.errorLogs.slice(-this.MAX_LOGS)
-    }
-  }
-
-  /**
-   * Resets all error logs (useful for testing)
-   */
-  static reset(): void {
-    this.errorLogs = []
-  }
-
-  /**
-   * Gets all error logs (for testing/debugging)
-   */
-  static getAllErrorLogs(): ErrorLog[] {
-    return [...this.errorLogs]
+  private notifyCallbacks(error: AppError): void {
+    const callbacks = this.errorCallbacks.get(error.code) || [];
+    const allCallbacks = this.errorCallbacks.get('*') || [];
+    
+    [...callbacks, ...allCallbacks].forEach(callback => {
+      try {
+        callback(error);
+      } catch (callbackError) {
+        console.error('Error in error callback:', callbackError);
+      }
+    });
   }
 }
+
+/**
+ * Express error middleware
+ */
+export const errorMiddleware = (
+  error: Error,
+  req: any,
+  res: any,
+  next: any
+) => {
+  const handler = ErrorHandler.getInstance();
+  const context: ErrorContext = {
+    requestId: req.id,
+    endpoint: req.path,
+    timestamp: Date.now(),
+    userAgent: req.get('User-Agent'),
+    ip: req.ip,
+    userId: req.user?.id
+  };
+
+  const appError = handler.handle(error, context);
+  
+  res.status(appError.statusCode).json({
+    error: {
+      code: appError.code,
+      message: appError.message,
+      ...(appError.statusCode < 500 && { context: appError.context })
+    }
+  });
+};
+
+/**
+ * Global error handler instance
+ */
+export const globalErrorHandler = ErrorHandler.getInstance();
