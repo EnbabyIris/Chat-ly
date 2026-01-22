@@ -28,9 +28,9 @@
       "vitest"
     ],
     "has_test_runner": true,
-    "total_commits": 27,
-    "recent_commits_12mo": 27,
-    "commits_referencing_issues": 3,
+    "total_commits": 29,
+    "recent_commits_12mo": 29,
+    "commits_referencing_issues": 4,
     "test_coverage_percentage": null,
     "swebench_readiness_score": 83.0,
     "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
