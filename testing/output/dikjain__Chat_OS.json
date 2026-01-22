@@ -1,21 +1,24 @@
 {
   "repo_name": "Chat_OS",
   "repo_full_name": "dikjain/Chat_OS",
-  "overall_score": 58.64,
+
+  "overall_score": 53.16,
   "recommendation": "\u2705 GOOD",
   "repo_metrics": {
     "repo_name": "chat-turbo",
-    "total_files": 326,
-    "test_files": 28,
-    "test_file_ratio": 0.08588957055214724,
-    "source_files": 200,
-    "total_loc": 28649,
-    "source_loc": 20783,
-    "test_loc": 7866,
+    "total_files": 321,
+    "test_files": 27,
+    "test_file_ratio": 0.08411214953271028,
+    "source_files": 198,
+    "total_loc": 28118,
+    "source_loc": 20241,
+    "test_loc": 7877,
     "languages": {
-      "TypeScript": 215,
+      "TypeScript": 211,
+
       "Python": 16,
       "JavaScript": 15
+
     },
     "primary_language": "TypeScript",
     "has_ci_cd": true,
@@ -28,41 +31,32 @@
       "vitest"
     ],
     "has_test_runner": true,
-    "total_commits": 29,
-    "recent_commits_12mo": 29,
-    "commits_referencing_issues": 16,
+
+    "total_commits": 27,
+    "recent_commits_12mo": 27,
+    "commits_referencing_issues": 10,
     "test_coverage_percentage": null,
-    "swebench_readiness_score": 89.4,
+    "swebench_readiness_score": 88.6,
+
     "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
     "strengths": [],
     "weaknesses": [],
     "commit_spread_days": 52.6,
-    "median_commit_interval_hours": 0.15
+
+    "median_commit_interval_hours": 0.11
+
   },
   "pr_analysis": {
-    "total_prs": 8,
-    "accepted": 1,
-    "rejected": 7,
-    "acceptance_rate": 0.125,
+    "total_prs": 5,
+    "accepted": 0,
+    "rejected": 5,
+    "acceptance_rate": 0.0,
     "rejection_breakdown": {
-      "difficulty_not_hard": {
-        "count": 4,
-        "percentage": 57.1
-      },
-      "fewer_than_min_test_files": {
-        "count": 3,
-        "percentage": 42.9
+      "issue_word_count": {
+        "count": 5,
+        "percentage": 100.0
       }
     },
-    "accepted_prs": [
-      {
-        "number": 12,
-        "title": "Feat/rate limiting security",
-        "url": "https://github.com/dikjain/Chat_OS/pull/12",
-        "baseRefOid": "fb698d9523e532f9d43546917555a0bab3a0a0a5",
-        "headRefOid": "a8f631c4ab530e002cd63e293a8b840d83044f5b"
-      }
-    ],
-    "f2p_skipped_reason": "No test framework detected"
+    "accepted_prs": []
   }
 }
