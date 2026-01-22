@@ -1,21 +1,21 @@
 {
   "repo_name": "Chat_OS",
   "repo_full_name": "dikjain/Chat_OS",
-  "overall_score": 50.16,
-  "recommendation": "\u2705 GOOD",
+  "overall_score": 49.8,
+  "recommendation": "\u26a0\ufe0f FAIR",
   "repo_metrics": {
     "repo_name": "chat-turbo",
-    "total_files": 321,
+    "total_files": 327,
     "test_files": 27,
-    "test_file_ratio": 0.08411214953271028,
+    "test_file_ratio": 0.08256880733944955,
     "source_files": 198,
-    "total_loc": 28118,
-    "source_loc": 20241,
+    "total_loc": 28152,
+    "source_loc": 20275,
     "test_loc": 7877,
     "languages": {
       "TypeScript": 211,
-      "Python": 16,
-      "JavaScript": 15
+      "JavaScript": 16,
+      "Python": 16
     },
     "primary_language": "TypeScript",
     "has_ci_cd": true,
@@ -32,7 +32,7 @@
     "recent_commits_12mo": 27,
     "commits_referencing_issues": 3,
     "test_coverage_percentage": null,
-    "swebench_readiness_score": 83.6,
+    "swebench_readiness_score": 83.0,
     "recommendation": "\ud83c\udf1f EXCELLENT - Highly suitable for SWE-Bench+ samples",
     "strengths": [],
     "weaknesses": [],
