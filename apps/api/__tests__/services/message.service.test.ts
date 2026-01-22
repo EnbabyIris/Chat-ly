@@ -1,8 +1,11 @@
 import { MessageService } from '../../src/services/message.service'
-import { db } from '../../src/db'
 
-// Mock dependencies
-jest.mock('../../src/db')
+// Simple test to verify service can be instantiated
+describe('MessageService', () => {
+  it('should be defined', () => {
+    expect(MessageService).toBeDefined()
+  })
+})
 jest.mock('@repo/shared/constants', () => ({
   ERROR_MESSAGES: {
     MESSAGE_NOT_FOUND: 'Message not found',

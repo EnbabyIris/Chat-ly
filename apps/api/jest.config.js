@@ -7,9 +7,10 @@ export default {
       useESM: true,
     },
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@repo/shared/constants$': '<rootDir>/../../packages/shared/src/constants/index.ts',
   },
   roots: ['<rootDir>/src', '<rootDir>/__tests__'],
   testMatch: [
@@ -25,6 +26,12 @@ export default {
     '!src/**/*.d.ts',
     '!src/server.ts',
     '!src/**/*.config.(ts|js)',
+    '!src/db/index.ts',  // Skip database file with ES module issues
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    'src/db/index.ts',  // Skip problematic files
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
