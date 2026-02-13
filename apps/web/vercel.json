@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "installCommand": "cd ../.. && npm install -g pnpm@9.1.0 && pnpm install --no-frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm run build --filter=@repo/shared && pnpm run build --filter=web"
+  "installCommand": "cd ../.. && corepack enable && NODE_ENV=development pnpm install",
+  "buildCommand": "cd ../.. && pnpm --filter @repo/shared run build && pnpm --filter web run build"
 }
