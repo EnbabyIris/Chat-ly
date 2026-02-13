@@ -15,7 +15,7 @@ class SocketClient {
   private socket: Socket<SocketEvents> | null = null;
   private isConnecting = false;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 20;
 
   /**
    * Connect to Socket.IO server with JWT authentication
@@ -39,14 +39,16 @@ class SocketClient {
 
     try {
       this.socket = io(SOCKET_URL, {
-        auth: {
-          token: accessToken,
+        auth: (cb) => {
+          // Dynamically get fresh token on each connection/reconnection attempt
+          const token = tokenStorage.getAccessToken();
+          cb({ token: token || "" });
         },
         transports: ["websocket", "polling"],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
+        reconnectionDelayMax: 10000,
       });
 
       this.setupEventHandlers();

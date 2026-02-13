@@ -1,9 +1,13 @@
-import type { Response } from 'express';
-import { StatusService } from '../services/status.service';
-import { successResponse } from '../utils/response';
-import type { AuthRequest } from '../middleware/auth';
-import { HTTP_STATUS } from '@repo/shared/constants';
-import type { CreateStatusInput, StatusIdParam } from '@repo/shared/validations';
+import type { Response } from "express";
+import { StatusService } from "../services/status.service";
+import { successResponse } from "../utils/response";
+import type { AuthRequest } from "../middleware/auth";
+import { HTTP_STATUS, SOCKET_EVENTS } from "@repo/shared/constants";
+import type {
+  CreateStatusInput,
+  StatusIdParam,
+} from "@repo/shared/validations";
+import { getIOInstance } from "../socket/io-instance";
 
 const statusService = new StatusService();
 
@@ -17,13 +21,32 @@ export class StatusController {
     res: Response,
   ): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const statusData = req.body;
-    const status = await statusService.createStatus(req.user.userId, statusData);
+    const status = await statusService.createStatus(
+      req.user.userId,
+      statusData,
+    );
 
-    return successResponse(res, { status }, 'Status created successfully', HTTP_STATUS.CREATED);
+    // Broadcast to all connected users so they see the new status in real-time
+    const io = getIOInstance();
+    if (io) {
+      io.emit(SOCKET_EVENTS.STATUS_CREATED, { status });
+    }
+
+    return successResponse(
+      res,
+      { status },
+      "Status created successfully",
+      HTTP_STATUS.CREATED,
+    );
   }
 
   /**
@@ -32,15 +55,24 @@ export class StatusController {
    */
   async getMyStatuses(req: AuthRequest, res: Response): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const statuses = await statusService.getUserStatuses(req.user.userId);
 
-    return successResponse(res, {
-      statuses,
-      total: statuses.length
-    }, 'User statuses retrieved successfully');
+    return successResponse(
+      res,
+      {
+        statuses,
+        total: statuses.length,
+      },
+      "User statuses retrieved successfully",
+    );
   }
 
   /**
@@ -49,13 +81,18 @@ export class StatusController {
    */
   async getAllStatuses(req: AuthRequest, res: Response): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const { userId } = req.query;
 
     let statuses;
-    if (userId && typeof userId === 'string') {
+    if (userId && typeof userId === "string") {
       // Get statuses for specific user
       statuses = await statusService.getUserStatuses(userId);
     } else {
@@ -63,10 +100,14 @@ export class StatusController {
       statuses = await statusService.getAllStatuses();
     }
 
-    return successResponse(res, {
-      statuses,
-      total: statuses.length
-    }, 'Statuses retrieved successfully');
+    return successResponse(
+      res,
+      {
+        statuses,
+        total: statuses.length,
+      },
+      "Statuses retrieved successfully",
+    );
   }
 
   /**
@@ -78,13 +119,18 @@ export class StatusController {
     res: Response,
   ): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const { statusId } = req.params;
     const status = await statusService.getStatusById(statusId);
 
-    return successResponse(res, { status }, 'Status retrieved successfully');
+    return successResponse(res, { status }, "Status retrieved successfully");
   }
 
   /**
@@ -96,12 +142,26 @@ export class StatusController {
     res: Response,
   ): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const { statusId } = req.params;
     await statusService.deleteStatus(req.user.userId, statusId);
 
-    return successResponse(res, null, 'Status deleted successfully');
+    // Broadcast to all connected users so they see status removal in real-time
+    const io = getIOInstance();
+    if (io) {
+      io.emit(SOCKET_EVENTS.STATUS_DELETED, {
+        statusId,
+        userId: req.user.userId,
+      });
+    }
+
+    return successResponse(res, null, "Status deleted successfully");
   }
 }

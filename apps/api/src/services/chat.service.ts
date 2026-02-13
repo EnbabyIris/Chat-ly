@@ -1,8 +1,16 @@
-import { db, chats, chatParticipants, messages } from '../db';
-import { eq, and, inArray, desc, isNull } from 'drizzle-orm';
-import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
-import { ERROR_MESSAGES } from '@repo/shared/constants';
-import type { CreateChatDTO, UpdateChatDTO, ChatListItem } from '@repo/shared/types';
+import { db, chats, chatParticipants, messages } from "../db";
+import { eq, and, inArray, desc, isNull } from "drizzle-orm";
+import {
+  NotFoundError,
+  ForbiddenError,
+  ValidationError,
+} from "../utils/errors";
+import { ERROR_MESSAGES } from "@repo/shared/constants";
+import type {
+  CreateChatDTO,
+  UpdateChatDTO,
+  ChatListItem,
+} from "@repo/shared/types";
 
 export class ChatService {
   async createChat(userId: string, data: CreateChatDTO) {
@@ -13,7 +21,10 @@ export class ChatService {
 
     // Check if 1:1 chat already exists
     if (!data.isGroupChat && data.participantIds.length === 1) {
-      const existingChat = await this.findExistingOneToOneChat(userId, data.participantIds[0]);
+      const existingChat = await this.findExistingOneToOneChat(
+        userId,
+        data.participantIds[0],
+      );
       if (existingChat) {
         return existingChat;
       }
@@ -36,7 +47,7 @@ export class ChatService {
       allParticipants.map((participantId, index) => ({
         chatId: newChat.id,
         userId: participantId,
-        role: index === 0 && data.isGroupChat ? 'admin' : 'member',
+        role: index === 0 && data.isGroupChat ? "admin" : "member",
       })),
     );
 
@@ -45,20 +56,33 @@ export class ChatService {
   }
 
   async findExistingOneToOneChat(user1Id: string, user2Id: string) {
-    const chat = await db.query.chats.findFirst({
-      where: eq(chats.isGroupChat, false),
+    // Find all direct (non-group) chats where user1 is a participant
+    const user1Chats = await db.query.chatParticipants.findMany({
+      where: and(
+        eq(chatParticipants.userId, user1Id),
+        isNull(chatParticipants.leftAt),
+      ),
       with: {
-        participants: {
-          where: and(
-            inArray(chatParticipants.userId, [user1Id, user2Id]),
-            isNull(chatParticipants.leftAt),
-          ),
+        chat: {
+          with: {
+            participants: {
+              where: isNull(chatParticipants.leftAt),
+            },
+          },
         },
       },
     });
 
-    if (chat && chat.participants.length === 2) {
-      return this.getChatById(chat.id, user1Id);
+    // Find a direct chat that has exactly these two users
+    for (const participation of user1Chats) {
+      const chat = participation.chat;
+      if (
+        !chat.isGroupChat &&
+        chat.participants.length === 2 &&
+        chat.participants.some((p) => p.userId === user2Id)
+      ) {
+        return this.getChatById(chat.id, user1Id);
+      }
     }
 
     return null;
@@ -103,7 +127,9 @@ export class ChatService {
     }
 
     // Check if user is participant
-    const isParticipant = chat.participants.some((p) => p.userId === userId && p.leftAt === null);
+    const isParticipant = chat.participants.some(
+      (p) => p.userId === userId && p.leftAt === null,
+    );
     if (!isParticipant) {
       throw new ForbiddenError(ERROR_MESSAGES.NOT_CHAT_PARTICIPANT);
     }
@@ -113,7 +139,10 @@ export class ChatService {
 
   async getUserChats(userId: string): Promise<ChatListItem[]> {
     const userChats = await db.query.chatParticipants.findMany({
-      where: and(eq(chatParticipants.userId, userId), isNull(chatParticipants.leftAt)),
+      where: and(
+        eq(chatParticipants.userId, userId),
+        isNull(chatParticipants.leftAt),
+      ),
       with: {
         chat: {
           with: {
@@ -171,7 +200,11 @@ export class ChatService {
             content: uc.chat.messages[0].content,
             senderId: uc.chat.messages[0].senderId!,
             senderName: uc.chat.messages[0].sender!.name,
-            messageType: uc.chat.messages[0].messageType as 'text' | 'image' | 'file' | 'system',
+            messageType: uc.chat.messages[0].messageType as
+              | "text"
+              | "image"
+              | "file"
+              | "system",
             createdAt: uc.chat.messages[0].createdAt,
           }
         : undefined,
@@ -183,11 +216,14 @@ export class ChatService {
   async updateChat(chatId: string, userId: string, data: UpdateChatDTO) {
     // Verify user is admin
     const participant = await db.query.chatParticipants.findFirst({
-      where: and(eq(chatParticipants.chatId, chatId), eq(chatParticipants.userId, userId)),
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+      ),
     });
 
-    if (!participant || participant.role !== 'admin') {
-      throw new ForbiddenError('Only admins can update chat settings');
+    if (!participant || participant.role !== "admin") {
+      throw new ForbiddenError("Only admins can update chat settings");
     }
 
     const [updatedChat] = await db
@@ -205,11 +241,14 @@ export class ChatService {
   async deleteChat(chatId: string, userId: string) {
     // Verify user is admin
     const participant = await db.query.chatParticipants.findFirst({
-      where: and(eq(chatParticipants.chatId, chatId), eq(chatParticipants.userId, userId)),
+      where: and(
+        eq(chatParticipants.chatId, chatId),
+        eq(chatParticipants.userId, userId),
+      ),
     });
 
-    if (!participant || participant.role !== 'admin') {
-      throw new ForbiddenError('Only admins can delete chat');
+    if (!participant || participant.role !== "admin") {
+      throw new ForbiddenError("Only admins can delete chat");
     }
 
     await db.delete(chats).where(eq(chats.id, chatId));
@@ -231,7 +270,11 @@ export class ChatService {
   // GROUP MANAGEMENT METHODS
   // ================================
 
-  async addParticipants(chatId: string, userId: string, participantIds: string[]) {
+  async addParticipants(
+    chatId: string,
+    userId: string,
+    participantIds: string[],
+  ) {
     // Verify chat exists and is a group
     const chat = await db.query.chats.findFirst({
       where: eq(chats.id, chatId),
@@ -242,7 +285,7 @@ export class ChatService {
     }
 
     if (!chat.isGroupChat) {
-      throw new ValidationError('Cannot add participants to direct chat');
+      throw new ValidationError("Cannot add participants to direct chat");
     }
 
     // Verify user is admin
@@ -254,8 +297,8 @@ export class ChatService {
       ),
     });
 
-    if (!userParticipant || userParticipant.role !== 'admin') {
-      throw new ForbiddenError('Only admins can add participants');
+    if (!userParticipant || userParticipant.role !== "admin") {
+      throw new ForbiddenError("Only admins can add participants");
     }
 
     // Check for existing participants and filter out duplicates
@@ -267,19 +310,21 @@ export class ChatService {
       ),
     });
 
-    const existingUserIds = existingParticipants.map(p => p.userId);
-    const newParticipantIds = participantIds.filter(id => !existingUserIds.includes(id));
+    const existingUserIds = existingParticipants.map((p) => p.userId);
+    const newParticipantIds = participantIds.filter(
+      (id) => !existingUserIds.includes(id),
+    );
 
     if (newParticipantIds.length === 0) {
-      throw new ValidationError('All participants are already in the group');
+      throw new ValidationError("All participants are already in the group");
     }
 
     // Add new participants
     await db.insert(chatParticipants).values(
-      newParticipantIds.map(participantId => ({
+      newParticipantIds.map((participantId) => ({
         chatId,
         userId: participantId,
-        role: 'member' as const,
+        role: "member" as const,
       })),
     );
 
@@ -292,7 +337,11 @@ export class ChatService {
     return { addedCount: newParticipantIds.length };
   }
 
-  async removeParticipant(chatId: string, userId: string, participantId: string) {
+  async removeParticipant(
+    chatId: string,
+    userId: string,
+    participantId: string,
+  ) {
     // Verify chat exists and is a group
     const chat = await db.query.chats.findFirst({
       where: eq(chats.id, chatId),
@@ -303,7 +352,7 @@ export class ChatService {
     }
 
     if (!chat.isGroupChat) {
-      throw new ValidationError('Cannot remove participants from direct chat');
+      throw new ValidationError("Cannot remove participants from direct chat");
     }
 
     // Verify user is admin or removing themselves
@@ -329,26 +378,28 @@ export class ChatService {
     });
 
     if (!targetParticipant) {
-      throw new NotFoundError('Participant not found in group');
+      throw new NotFoundError("Participant not found in group");
     }
 
     // Only admins can remove others, or users can remove themselves
-    if (participantId !== userId && userParticipant.role !== 'admin') {
-      throw new ForbiddenError('Only admins can remove other participants');
+    if (participantId !== userId && userParticipant.role !== "admin") {
+      throw new ForbiddenError("Only admins can remove other participants");
     }
 
     // Cannot remove the only admin unless they're removing themselves and there's another admin
-    if (targetParticipant.role === 'admin') {
+    if (targetParticipant.role === "admin") {
       const adminParticipants = await db.query.chatParticipants.findMany({
         where: and(
           eq(chatParticipants.chatId, chatId),
-          eq(chatParticipants.role, 'admin'),
+          eq(chatParticipants.role, "admin"),
           isNull(chatParticipants.leftAt),
         ),
       });
 
       if (adminParticipants.length <= 1) {
-        throw new ValidationError('Cannot remove the only admin from the group');
+        throw new ValidationError(
+          "Cannot remove the only admin from the group",
+        );
       }
     }
 
@@ -356,10 +407,12 @@ export class ChatService {
     await db
       .update(chatParticipants)
       .set({ leftAt: new Date() })
-      .where(and(
-        eq(chatParticipants.chatId, chatId),
-        eq(chatParticipants.userId, participantId),
-      ));
+      .where(
+        and(
+          eq(chatParticipants.chatId, chatId),
+          eq(chatParticipants.userId, participantId),
+        ),
+      );
 
     // Update chat updated_at timestamp
     await db
@@ -381,7 +434,7 @@ export class ChatService {
     }
 
     if (!chat.isGroupChat) {
-      throw new ValidationError('Cannot transfer admin in direct chat');
+      throw new ValidationError("Cannot transfer admin in direct chat");
     }
 
     // Verify user is current admin
@@ -393,8 +446,8 @@ export class ChatService {
       ),
     });
 
-    if (!userParticipant || userParticipant.role !== 'admin') {
-      throw new ForbiddenError('Only current admin can transfer admin role');
+    if (!userParticipant || userParticipant.role !== "admin") {
+      throw new ForbiddenError("Only current admin can transfer admin role");
     }
 
     // Verify new admin is a participant
@@ -407,7 +460,7 @@ export class ChatService {
     });
 
     if (!newAdminParticipant) {
-      throw new NotFoundError('New admin must be a participant in the group');
+      throw new NotFoundError("New admin must be a participant in the group");
     }
 
     // Transfer admin role in transaction
@@ -415,20 +468,24 @@ export class ChatService {
       // Remove admin role from current admin
       await tx
         .update(chatParticipants)
-        .set({ role: 'member' })
-        .where(and(
-          eq(chatParticipants.chatId, chatId),
-          eq(chatParticipants.userId, userId),
-        ));
+        .set({ role: "member" })
+        .where(
+          and(
+            eq(chatParticipants.chatId, chatId),
+            eq(chatParticipants.userId, userId),
+          ),
+        );
 
       // Add admin role to new admin
       await tx
         .update(chatParticipants)
-        .set({ role: 'admin' })
-        .where(and(
-          eq(chatParticipants.chatId, chatId),
-          eq(chatParticipants.userId, newAdminId),
-        ));
+        .set({ role: "admin" })
+        .where(
+          and(
+            eq(chatParticipants.chatId, chatId),
+            eq(chatParticipants.userId, newAdminId),
+          ),
+        );
 
       // Update chat admin reference
       await tx
@@ -454,7 +511,7 @@ export class ChatService {
     }
 
     if (!chat.isGroupChat) {
-      throw new ValidationError('Cannot archive direct chat');
+      throw new ValidationError("Cannot archive direct chat");
     }
 
     // Verify user is participant
@@ -477,15 +534,21 @@ export class ChatService {
         leftAt: new Date(),
         isActive: false,
       })
-      .where(and(
-        eq(chatParticipants.chatId, chatId),
-        eq(chatParticipants.userId, userId),
-      ));
+      .where(
+        and(
+          eq(chatParticipants.chatId, chatId),
+          eq(chatParticipants.userId, userId),
+        ),
+      );
 
     return { archived: true };
   }
 
-  async deleteGroup(chatId: string, userId: string, hardDelete: boolean = false) {
+  async deleteGroup(
+    chatId: string,
+    userId: string,
+    hardDelete: boolean = false,
+  ) {
     // Verify chat exists and is a group
     const chat = await db.query.chats.findFirst({
       where: eq(chats.id, chatId),
@@ -496,7 +559,7 @@ export class ChatService {
     }
 
     if (!chat.isGroupChat) {
-      throw new ValidationError('Cannot delete direct chat');
+      throw new ValidationError("Cannot delete direct chat");
     }
 
     // Verify user is admin
@@ -508,8 +571,8 @@ export class ChatService {
       ),
     });
 
-    if (!participant || participant.role !== 'admin') {
-      throw new ForbiddenError('Only admins can delete the group');
+    if (!participant || participant.role !== "admin") {
+      throw new ForbiddenError("Only admins can delete the group");
     }
 
     if (hardDelete) {

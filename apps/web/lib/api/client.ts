@@ -82,6 +82,8 @@ export class ClientApiError extends Error {
 // API Client class
 class ApiClient {
   private baseURL: string;
+  private isRefreshing = false;
+  private refreshPromise: Promise<boolean> | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -90,6 +92,7 @@ class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
+    skipAuthRetry = false,
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
@@ -125,13 +128,17 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        // Handle token expiration
-        if (response.status === HTTP_STATUS.UNAUTHORIZED && accessToken) {
-          // Try to refresh token
+        // Handle token expiration (skip if this is already a refresh attempt)
+        if (
+          response.status === HTTP_STATUS.UNAUTHORIZED &&
+          accessToken &&
+          !skipAuthRetry
+        ) {
+          // Try to refresh token (dedup concurrent refreshes)
           const refreshed = await this.refreshToken();
           if (refreshed) {
-            // Retry the original request
-            return this.request(endpoint, options);
+            // Retry the original request (skip auth retry to prevent infinite loop)
+            return this.request(endpoint, options, true);
           } else {
             // Refresh failed, clear tokens and redirect to login
             tokenStorage.clearTokens();
@@ -238,19 +245,38 @@ class ApiClient {
   }
 
   async refreshToken(): Promise<boolean> {
+    // Dedup concurrent refresh attempts
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
     const refreshToken = tokenStorage.getRefreshToken();
 
     if (!refreshToken) {
       return false;
     }
 
+    this.isRefreshing = true;
+    this.refreshPromise = this._doRefresh(refreshToken);
+
     try {
+      return await this.refreshPromise;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  private async _doRefresh(refreshToken: string): Promise<boolean> {
+    try {
+      // Use skipAuthRetry=true to prevent infinite refresh loop
       const response = await this.request<{ accessToken: string }>(
         `/api/v1${API_ENDPOINTS.AUTH.REFRESH}`,
         {
           method: "POST",
           body: JSON.stringify({ refreshToken }),
         },
+        true, // skipAuthRetry - don't try to refresh again if this fails
       );
 
       if (response.success && response.data) {

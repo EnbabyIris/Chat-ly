@@ -1,7 +1,16 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationOptions } from '@tanstack/react-query';
-import { apiClient } from '../client';
-import { queryKeys } from './query-keys';
-import type { CreateStatusDTO, StatusWithUser, StatusListResponse } from '@repo/shared/types';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+} from "@tanstack/react-query";
+import { apiClient } from "../client";
+import { queryKeys } from "./query-keys";
+import type {
+  CreateStatusDTO,
+  StatusWithUser,
+  StatusListResponse,
+} from "@repo/shared/types";
 
 /**
  * Query hook to get user's own statuses
@@ -10,7 +19,7 @@ export function useUserStatuses() {
   return useQuery({
     queryKey: queryKeys.statuses.user(),
     queryFn: async (): Promise<StatusListResponse> => {
-      const response = await apiClient.get('/api/v1/statuses/my');
+      const response = await apiClient.get("/api/v1/statuses/my");
       return response.data as StatusListResponse;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -24,10 +33,11 @@ export function useAllStatuses() {
   return useQuery({
     queryKey: queryKeys.statuses.all,
     queryFn: async (): Promise<StatusListResponse> => {
-      const response = await apiClient.get('/api/v1/statuses');
+      const response = await apiClient.get("/api/v1/statuses");
       return response.data as StatusListResponse;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds - keep fresh for expiry
+    refetchInterval: 60 * 1000, // Poll every 60 seconds to catch expired statuses
   });
 }
 
@@ -35,13 +45,16 @@ export function useAllStatuses() {
  * Mutation hook to create a new status
  */
 export function useCreateStatus(
-  options?: Omit<UseMutationOptions<StatusWithUser, Error, CreateStatusDTO, unknown>, 'mutationFn'>
+  options?: Omit<
+    UseMutationOptions<StatusWithUser, Error, CreateStatusDTO, unknown>,
+    "mutationFn"
+  >,
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CreateStatusDTO): Promise<StatusWithUser> => {
-      const response = await apiClient.post('/api/v1/statuses', data);
+      const response = await apiClient.post("/api/v1/statuses", data);
       return (response.data as { status: StatusWithUser }).status;
     },
     onSuccess: () => {
@@ -72,7 +85,10 @@ export function useUserStatusesById(userId: string) {
  * Mutation hook to delete a status
  */
 export function useDeleteStatus(
-  options?: Omit<UseMutationOptions<void, Error, string, unknown>, 'mutationFn'>
+  options?: Omit<
+    UseMutationOptions<void, Error, string, unknown>,
+    "mutationFn"
+  >,
 ) {
   const queryClient = useQueryClient();
 

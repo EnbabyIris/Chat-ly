@@ -1,12 +1,13 @@
-import type { Server as HttpServer } from 'http';
-import { Server } from 'socket.io';
-import type { Socket } from 'socket.io';
-import { socketAuthMiddleware, getSocketUser } from './auth.middleware';
-import { MessageHandler } from './handlers/message.handler';
-import { PresenceHandler } from './handlers/presence.handler';
-import { SOCKET_EVENTS } from '@repo/shared/constants';
-import type { SocketEvents } from './types';
-import { ChatService } from '../services/chat.service';
+import type { Server as HttpServer } from "http";
+import { Server } from "socket.io";
+import type { Socket } from "socket.io";
+import { socketAuthMiddleware, getSocketUser } from "./auth.middleware";
+import { MessageHandler } from "./handlers/message.handler";
+import { PresenceHandler } from "./handlers/presence.handler";
+import { SOCKET_EVENTS } from "@repo/shared/constants";
+import type { SocketEvents } from "./types";
+import { ChatService } from "../services/chat.service";
+import { setIOInstance } from "./io-instance";
 
 export class SocketIOServer {
   private io: Server<SocketEvents>;
@@ -18,14 +19,17 @@ export class SocketIOServer {
     // Initialize Socket.IO server
     this.io = new Server(httpServer, {
       cors: {
-        origin: '*', // Allow all origins - accessible from anywhere in the world
-        methods: ['GET', 'POST'],
-        credentials: false // Must be false when using wildcard origin
+        origin: "*", // Allow all origins - accessible from anywhere in the world
+        methods: ["GET", "POST"],
+        credentials: false, // Must be false when using wildcard origin
       },
       pingTimeout: 60000,
       pingInterval: 25000,
-      transports: ['websocket', 'polling']
+      transports: ["websocket", "polling"],
     });
+
+    // Store global reference for broadcasting from controllers
+    setIOInstance(this.io as any);
 
     // Initialize handlers
     this.chatService = new ChatService();
@@ -49,11 +53,11 @@ export class SocketIOServer {
    * Setup connection handling
    */
   private setupConnectionHandling(): void {
-    this.io.on('connection', async (socket: Socket) => {
+    this.io.on("connection", async (socket: Socket) => {
       const user = getSocketUser(socket);
-      
+
       if (!user) {
-        console.error('❌ Socket connected without authentication');
+        console.error("❌ Socket connected without authentication");
         socket.disconnect();
         return;
       }
@@ -75,20 +79,20 @@ export class SocketIOServer {
           await socket.join(rooms);
         }
       } catch (error) {
-        console.error('Failed to auto-join user chat rooms:', error);
+        console.error("Failed to auto-join user chat rooms:", error);
       }
 
       // Emit authentication success
-      socket.emit('authenticated', { 
-        success: true, 
-        user: { id: user.userId, email: user.email } 
+      socket.emit("authenticated", {
+        success: true,
+        user: { id: user.userId, email: user.email },
       });
 
       // Register all event handlers
       this.registerEventHandlers(socket);
 
       // Handle disconnection
-      socket.on('disconnect', async (reason) => {
+      socket.on("disconnect", async (reason) => {
         console.log(`🔌 Socket disconnected: ${user.userId} (${reason})`);
       });
     });
@@ -103,11 +107,11 @@ export class SocketIOServer {
     this.presenceHandler.registerHandlers(socket);
 
     // Handle generic errors
-    socket.on('error', (error) => {
-      console.error('Socket error:', error);
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
       socket.emit(SOCKET_EVENTS.ERROR, {
-        message: 'An error occurred',
-        code: 'SOCKET_ERROR'
+        message: "An error occurred",
+        code: "SOCKET_ERROR",
       });
     });
   }
@@ -116,8 +120,8 @@ export class SocketIOServer {
    * Setup global event handlers
    */
   private setupEventHandlers(): void {
-    this.io.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error);
+    this.io.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
     });
 
     // Log server statistics periodically
@@ -125,8 +129,10 @@ export class SocketIOServer {
       const connectedSockets = this.io.engine.clientsCount;
       const onlineUsers = this.presenceHandler.getOnlineUserCount();
       const activeRooms = 0; // Chat rooms no longer tracked
-      
-      console.log(`📊 Socket.IO Stats: ${connectedSockets} sockets, ${onlineUsers} users online, ${activeRooms} active chats`);
+
+      console.log(
+        `📊 Socket.IO Stats: ${connectedSockets} sockets, ${onlineUsers} users online, ${activeRooms} active chats`,
+      );
     }, 60000); // Log every minute
   }
 
@@ -151,14 +157,17 @@ export class SocketIOServer {
     return this.presenceHandler;
   }
 
-
   /**
    * Broadcast message to specific users
    */
-  async broadcastToUsers(userIds: string[], event: keyof SocketEvents, data: any): Promise<void> {
+  async broadcastToUsers(
+    userIds: string[],
+    event: keyof SocketEvents,
+    data: any,
+  ): Promise<void> {
     for (const userId of userIds) {
       const sockets = await this.io.in(`user:${userId}`).fetchSockets();
-      sockets.forEach(socket => {
+      sockets.forEach((socket) => {
         socket.emit(event, data);
       });
     }
@@ -175,7 +184,7 @@ export class SocketIOServer {
     return {
       connectedSockets: this.io.engine.clientsCount,
       onlineUsers: this.presenceHandler.getOnlineUserCount(),
-      activeChats: 0 // Chat rooms no longer tracked
+      activeChats: 0, // Chat rooms no longer tracked
     };
   }
 
@@ -183,24 +192,26 @@ export class SocketIOServer {
    * Gracefully close the Socket.IO server
    */
   async close(): Promise<void> {
-    console.log('🔌 Closing Socket.IO server...');
-    
+    console.log("🔌 Closing Socket.IO server...");
+
     // Set all users offline
     const onlineUsers = this.presenceHandler.getOnlineUsers();
     for (const user of onlineUsers) {
       await this.presenceHandler.broadcastUserStatus(user.userId, false);
     }
-    
+
     this.io.close();
-    console.log('✅ Socket.IO server closed');
+    console.log("✅ Socket.IO server closed");
   }
 }
 
 // Export singleton instance creation function
-export const createSocketIOServer = (httpServer: HttpServer): SocketIOServer => {
+export const createSocketIOServer = (
+  httpServer: HttpServer,
+): SocketIOServer => {
   return new SocketIOServer(httpServer);
 };
 
-export * from './types';
-export * from './handlers/message.handler';
-export * from './handlers/presence.handler';
+export * from "./types";
+export * from "./handlers/message.handler";
+export * from "./handlers/presence.handler";

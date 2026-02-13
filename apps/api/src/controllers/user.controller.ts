@@ -1,11 +1,12 @@
-import type { Response } from 'express';
-import { UserService } from '../services/user.service';
-import { successResponse } from '../utils/response';
-import type { AuthRequest } from '../middleware/auth';
-import { HTTP_STATUS } from '@repo/shared/constants';
-import type { UserIdParam } from '@repo/shared/validations';
-import type { UpdateProfileDTO } from '@repo/shared/types';
-import type { OnlineUser } from '../socket/types';
+import type { Response } from "express";
+import { UserService } from "../services/user.service";
+import { successResponse } from "../utils/response";
+import type { AuthRequest } from "../middleware/auth";
+import { HTTP_STATUS, SOCKET_EVENTS } from "@repo/shared/constants";
+import type { UserIdParam } from "@repo/shared/validations";
+import type { UpdateProfileDTO } from "@repo/shared/types";
+import type { OnlineUser } from "../socket/types";
+import { getIOInstance } from "../socket/io-instance";
 
 const userService = new UserService();
 
@@ -19,14 +20,23 @@ export class UserController {
     res: Response,
   ): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const { userId } = req.params;
 
     const user = await userService.getUserById(userId);
 
-    return successResponse(res, { user }, 'User profile retrieved successfully');
+    return successResponse(
+      res,
+      { user },
+      "User profile retrieved successfully",
+    );
   }
 
   /**
@@ -35,13 +45,23 @@ export class UserController {
    */
   async searchUsers(req: AuthRequest, res: Response): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const { query, limit } = req.query;
 
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return successResponse(res, null, 'Search query is required', HTTP_STATUS.BAD_REQUEST);
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
+      return successResponse(
+        res,
+        null,
+        "Search query is required",
+        HTTP_STATUS.BAD_REQUEST,
+      );
     }
 
     const users = await userService.searchUsers(
@@ -50,7 +70,11 @@ export class UserController {
       limit ? parseInt(limit as string, 10) : undefined,
     );
 
-    return successResponse(res, { users }, 'Users search completed successfully');
+    return successResponse(
+      res,
+      { users },
+      "Users search completed successfully",
+    );
   }
 
   /**
@@ -62,14 +86,27 @@ export class UserController {
     res: Response,
   ): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const updateData = req.body;
 
     const user = await userService.updateProfile(req.user.userId, updateData);
 
-    return successResponse(res, { user }, 'Profile updated successfully');
+    // Broadcast profile update to all connected users for real-time avatar/name changes
+    const io = getIOInstance();
+    if (io) {
+      io.emit(SOCKET_EVENTS.PROFILE_UPDATED, {
+        user: { id: user.id, name: user.name, avatar: user.avatar },
+      });
+    }
+
+    return successResponse(res, { user }, "Profile updated successfully");
   }
 
   /**
@@ -78,17 +115,26 @@ export class UserController {
    */
   async getAllUsers(req: AuthRequest, res: Response): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     const users = await userService.getAllUsers(req.user.userId);
 
-    return successResponse(res, {
-      users,
-      total: users.length,
-      page: 1,
-      limit: users.length
-    }, 'Users retrieved successfully');
+    return successResponse(
+      res,
+      {
+        users,
+        total: users.length,
+        page: 1,
+        limit: users.length,
+      },
+      "Users retrieved successfully",
+    );
   }
 
   /**
@@ -97,12 +143,17 @@ export class UserController {
    */
   async getOnlineUsers(req: AuthRequest, res: Response): Promise<Response> {
     if (!req.user) {
-      return successResponse(res, null, 'Authentication required', HTTP_STATUS.UNAUTHORIZED);
+      return successResponse(
+        res,
+        null,
+        "Authentication required",
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     // Get presence handler from socket server
     // Import server instance dynamically to avoid circular dependencies
-    const server = require('../server').default;
+    const server = require("../server").default;
     const socketServer = server.getSocketServer();
     const presenceHandler = socketServer.getPresenceHandler();
 
@@ -126,11 +177,17 @@ export class UserController {
       }
     });
 
-    const users = (await Promise.all(userPromises)).filter(user => user !== null);
+    const users = (await Promise.all(userPromises)).filter(
+      (user) => user !== null,
+    );
 
-    return successResponse(res, {
-      users,
-      total: users.length
-    }, 'Online users retrieved successfully');
+    return successResponse(
+      res,
+      {
+        users,
+        total: users.length,
+      },
+      "Online users retrieved successfully",
+    );
   }
 }

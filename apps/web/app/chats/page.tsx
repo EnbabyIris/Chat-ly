@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { ChatSidebar } from '@/components/chat/chat-sidebar';
-import { ChatArea } from '@/components/chat/chat-area';
-import { FloatingHeader } from '@/components/layouts/floating-header';
-import { ProtectedRoute } from '@/components/auth/protected-route';
-import { CreateGroupDialog } from '@/components/features/create-group-dialog';
-import { StatusDialog } from '@/components/features/status-dialog';
-import { useChatData } from '@/hooks/use-chat-data';
-import { useChatFilters } from '@/hooks/use-chat-filters';
-import { useChatActions } from '@/hooks/use-chat-actions';
-import { useRealTimeMessages } from '@/hooks/use-real-time-messages';
-import { useAuth } from '@/contexts/auth-context';
-import { useNetworkStatus } from '@/hooks/use-network-status';
-import { useOnlineStatus } from '@/hooks/use-online-status';
-import { useUserStatusesById } from '@/lib/api/queries/status.queries';
-import { getErrorMessage } from '@/lib/utils/error-messages';
-import { useQueryClient } from '@tanstack/react-query';
-import type { ChatListItem, ActiveTab } from '../../lib/shared';
+import { useState, useCallback } from "react";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
+import { ChatArea } from "@/components/chat/chat-area";
+import { FloatingHeader } from "@/components/layouts/floating-header";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { CreateGroupDialog } from "@/components/features/create-group-dialog";
+import { StatusDialog } from "@/components/features/status-dialog";
+import { useChatData } from "@/hooks/use-chat-data";
+import { useChatFilters } from "@/hooks/use-chat-filters";
+import { useChatActions } from "@/hooks/use-chat-actions";
+import { useRealTimeMessages } from "@/hooks/use-real-time-messages";
+import { useAuth } from "@/contexts/auth-context";
+import { useNetworkStatus } from "@/hooks/use-network-status";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { useUserStatusesById } from "@/lib/api/queries/status.queries";
+import { getErrorMessage } from "@/lib/utils/error-messages";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ChatListItem, ActiveTab } from "../../lib/shared";
 
 function ChatsPageContent() {
   const [selectedChat, setSelectedChat] = useState<ChatListItem | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('chats');
+  const [activeTab, setActiveTab] = useState<ActiveTab>("chats");
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const { user } = useAuth();
@@ -30,36 +30,43 @@ function ChatsPageContent() {
   const queryClient = useQueryClient();
 
   // Get statuses for the other user in the selected chat
-  const otherUserId = selectedChat?.participants?.find(p => p.id !== user?.id)?.id;
-  const { data: userStatuses } = useUserStatusesById(otherUserId || '');
+  const otherUserId = selectedChat?.participants?.find(
+    (p) => p.id !== user?.id,
+  )?.id;
+  const { data: userStatuses } = useUserStatusesById(otherUserId || "");
 
   // Get data from custom hooks
-  const { users, chats, currentUser, onlinePeople, isLoading, error } = useChatData();
+  const { users, chats, currentUser, onlinePeople, isLoading, error } =
+    useChatData();
 
   // Create consistent current user (prefer auth context over API data)
-  const activeCurrentUser = user ? {
-    _id: user.id,
-    name: user.name,
-    pic: user.avatar || '',
-    email: user.email,
-    isOnline: true,
-  } : currentUser || { _id: '', name: '', pic: '', email: '', isOnline: false };
+  const activeCurrentUser = user
+    ? {
+        _id: user.id,
+        name: user.name,
+        pic: user.avatar || "",
+        email: user.email,
+        isOnline: true,
+      }
+    : currentUser || { _id: "", name: "", pic: "", email: "", isOnline: false };
 
   // Filter data (no search query needed)
   const { filteredUsers, filteredChats } = useChatFilters({
     users,
     chats,
-    searchQuery: '',
+    searchQuery: "",
     currentUser: activeCurrentUser,
   });
 
   // Get action handlers
-  const { handleSendMessage, handleSendFile, handleStartChat } = useChatActions({
-    currentUser: activeCurrentUser,
-    setSelectedChat,
-    setActiveTab,
-    chats,
-  });
+  const { handleSendMessage, handleSendFile, handleStartChat } = useChatActions(
+    {
+      currentUser: activeCurrentUser,
+      setSelectedChat,
+      setActiveTab,
+      chats,
+    },
+  );
 
   // Setup real-time message handling
   useRealTimeMessages({
@@ -73,53 +80,74 @@ function ChatsPageContent() {
   }, []);
 
   // Handle notification click - navigate to the chat
-  const handleNotificationClick = useCallback((chatId: string) => {
-    const chat = chats.find((c: any) => c.id === chatId);
-    if (chat) {
-      setSelectedChat(chat);
-      setActiveTab('chats');
-    }
-  }, [chats, setSelectedChat, setActiveTab]);
+  const handleNotificationClick = useCallback(
+    (chatId: string) => {
+      const chat = chats.find((c: any) => c.id === chatId);
+      if (chat) {
+        setSelectedChat(chat);
+        setActiveTab("chats");
+      } else {
+        // Chat not in local list yet — refetch and retry
+        queryClient.invalidateQueries({ queryKey: ["chats"] }).then(() => {
+          // Wait briefly for the query to refetch, then try again
+          setTimeout(() => {
+            const refetchedChats =
+              queryClient.getQueryData<ChatListItem[]>(["chats"]) || [];
+            const found = refetchedChats.find((c: any) => c.id === chatId);
+            if (found) {
+              setSelectedChat(found);
+              setActiveTab("chats");
+            }
+          }, 500);
+        });
+      }
+    },
+    [chats, setSelectedChat, setActiveTab, queryClient],
+  );
 
   // Handle successful group creation
-  const handleGroupCreated = useCallback((chat: any) => {
-    // Close the dialog first
-    setIsCreateGroupDialogOpen(false);
+  const handleGroupCreated = useCallback(
+    (chat: any) => {
+      // Close the dialog first
+      setIsCreateGroupDialogOpen(false);
 
-    // Convert to ChatListItem format and select it
-    const chatListItem: ChatListItem = {
-      id: chat.id,
-      name: chat.name,
-      isGroupChat: chat.isGroupChat,
-      avatar: chat.avatar,
-      participants: chat.participants?.map((p: any) => ({
-        id: p.user?.id || p.userId,
-        name: p.user?.name || 'Unknown',
-        email: p.user?.email || '',
-        avatar: p.user?.avatar || null,
-        isOnline: p.user?.isOnline || false,
-        lastSeen: p.user?.lastSeen || null,
-      })) || [],
-      latestMessage: chat.latestMessage ? {
-        id: chat.latestMessage.id,
-        content: chat.latestMessage.content,
-        senderId: chat.latestMessage.senderId || '',
-        senderName: chat.latestMessage.sender?.name || 'User',
-        messageType: chat.latestMessage.messageType,
-        createdAt: new Date(chat.latestMessage.createdAt),
-      } : undefined,
-      unreadCount: 0,
-      updatedAt: new Date(chat.updatedAt),
-    };
+      // Convert to ChatListItem format and select it
+      const chatListItem: ChatListItem = {
+        id: chat.id,
+        name: chat.name,
+        isGroupChat: chat.isGroupChat,
+        avatar: chat.avatar,
+        participants:
+          chat.participants?.map((p: any) => ({
+            id: p.user?.id || p.userId,
+            name: p.user?.name || "Unknown",
+            email: p.user?.email || "",
+            avatar: p.user?.avatar || null,
+            isOnline: p.user?.isOnline || false,
+            lastSeen: p.user?.lastSeen || null,
+          })) || [],
+        latestMessage: chat.latestMessage
+          ? {
+              id: chat.latestMessage.id,
+              content: chat.latestMessage.content,
+              senderId: chat.latestMessage.senderId || "",
+              senderName: chat.latestMessage.sender?.name || "User",
+              messageType: chat.latestMessage.messageType,
+              createdAt: new Date(chat.latestMessage.createdAt),
+            }
+          : undefined,
+        unreadCount: 0,
+        updatedAt: new Date(chat.updatedAt),
+      };
 
-    setSelectedChat(chatListItem);
-    setActiveTab('chats');
+      setSelectedChat(chatListItem);
+      setActiveTab("chats");
 
-    // Invalidate queries to refresh the chat list
-    queryClient.invalidateQueries({ queryKey: ['chats'] });
-  }, [setSelectedChat, setActiveTab, queryClient]);
-
-
+      // Invalidate queries to refresh the chat list
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    },
+    [setSelectedChat, setActiveTab, queryClient],
+  );
 
   // Handle loading state
   if (isLoading) {
@@ -136,18 +164,20 @@ function ChatsPageContent() {
   // Handle error state
   if (error) {
     const errorMessage = getErrorMessage(error);
-    
+
     return (
       <div className="h-screen flex items-center justify-center bg-neutral-50">
         <div className="text-center max-w-md">
           <div className="text-red-500 text-xl mb-4">⚠️</div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Failed to load chats</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Failed to load chats
+          </h2>
           <p className="text-gray-600 mb-4">{errorMessage}</p>
-          <button 
+          <button
             onClick={() => {
               // Retry by invalidating queries
               queryClient.invalidateQueries();
-            }} 
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Try Again
@@ -162,10 +192,12 @@ function ChatsPageContent() {
       {/* Network Status Indicator */}
       {isOffline && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          <p className="text-sm font-medium">⚠️ You are offline. Some features may be limited.</p>
+          <p className="text-sm font-medium">
+            ⚠️ You are offline. Some features may be limited.
+          </p>
         </div>
       )}
-      
+
       {/* Floating Header */}
       {activeCurrentUser._id && (
         <FloatingHeader
@@ -212,7 +244,10 @@ function ChatsPageContent() {
           isOpen={isStatusDialogOpen}
           onClose={() => setIsStatusDialogOpen(false)}
           statuses={userStatuses.statuses}
-          userName={selectedChat.participants?.find(p => p.id !== user?.id)?.name || 'User'}
+          userName={
+            selectedChat.participants?.find((p) => p.id !== user?.id)?.name ||
+            "User"
+          }
         />
       )}
     </div>
