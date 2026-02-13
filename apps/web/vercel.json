@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && npm install -g pnpm@9.1.0 && pnpm install --no-frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm run build --filter=@repo/shared && pnpm run build --filter=web"
 }

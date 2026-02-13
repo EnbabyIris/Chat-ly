@@ -1,12 +1,20 @@
-import type { StatusWithUser } from '@repo/shared/types';
+import type { JSX } from "react";
+import type { StatusWithUser } from "@repo/shared/types";
 
 interface StatusBarProps {
-  statusesByUser: Record<string, { userName: string; avatar: string | null; statuses: StatusWithUser[] }>;
+  statusesByUser: Record<
+    string,
+    { userName: string; avatar: string | null; statuses: StatusWithUser[] }
+  >;
   currentUserId: string;
   onUserClick: (userId: string) => void;
 }
 
-export const StatusBar = ({ statusesByUser, currentUserId, onUserClick }: StatusBarProps) => {
+export const StatusBar = ({
+  statusesByUser,
+  currentUserId,
+  onUserClick,
+}: StatusBarProps): JSX.Element => {
   const userIds = Object.keys(statusesByUser);
 
   // Sort: current user first, then others
@@ -40,7 +48,7 @@ export const StatusBar = ({ statusesByUser, currentUserId, onUserClick }: Status
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        target.style.display = "none";
                         const parent = target.parentElement;
                         if (parent) {
                           parent.innerHTML = `<span class="text-sm font-medium text-neutral-600">${userName.charAt(0).toUpperCase()}</span>`;
@@ -55,7 +63,7 @@ export const StatusBar = ({ statusesByUser, currentUserId, onUserClick }: Status
                 </div>
               </div>
               <span className="text-[11px] font-light text-neutral-500 truncate max-w-14 group-hover:text-neutral-800 transition-colors">
-                {isCurrentUser ? 'You' : userName.split(' ')[0]}
+                {isCurrentUser ? "You" : userName.split(" ")[0]}
               </span>
             </button>
           );

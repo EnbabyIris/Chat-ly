@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Users } from 'lucide-react';
-import { UserProfile } from '../features/user-profile';
-import { NotificationBell } from '../features/notification-bell';
-import { SearchUsersDialog } from '../features/search-users-dialog';
-import type { ChatUser, UserListItem } from '@/lib/shared/types';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Users } from "lucide-react";
+import { UserProfile } from "../features/user-profile";
+import { NotificationBell } from "../features/notification-bell";
+import { SearchUsersDialog } from "../features/search-users-dialog";
+import type { ChatUser, UserListItem } from "@/lib/shared/types";
 
 interface FloatingHeaderProps {
   currentUser: ChatUser;
@@ -32,12 +32,12 @@ export const FloatingHeader = ({
           whileHover="hover"
           initial="initial"
         >
-          <Search className="w-4 h-4 flex-shrink-0" />
+          <Search className="w-4 h-4 shrink-0" />
           <motion.span
             className=" text-sm font-medium whitespace-nowrap"
             variants={{
-              initial: { marginLeft : 0, width: 0, opacity: 0 },
-              hover: { marginLeft : 8,  width: "auto", opacity: 1 }
+              initial: { marginLeft: 0, width: 0, opacity: 0 },
+              hover: { marginLeft: 8, width: "auto", opacity: 1 },
             }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
@@ -52,12 +52,12 @@ export const FloatingHeader = ({
           whileHover="hover"
           initial="initial"
         >
-          <Users className="w-4 h-4 flex-shrink-0" />
+          <Users className="w-4 h-4 shrink-0" />
           <motion.span
             className=" text-sm font-medium whitespace-nowrap"
             variants={{
-              initial: { marginLeft : 0, width: 0, opacity: 0 },
-              hover: { marginLeft : 8,  width: "auto", opacity: 1 }
+              initial: { marginLeft: 0, width: 0, opacity: 0 },
+              hover: { marginLeft: 8, width: "auto", opacity: 1 },
             }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >

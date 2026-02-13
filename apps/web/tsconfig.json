@@ -9,6 +9,7 @@
     "jsx": "preserve",
     "noEmit": true,
     "baseUrl": ".",
+    "types": ["node", "react", "react-dom"],
     "paths": {
       "@/*": ["./*"]
     }
@@ -20,7 +21,5 @@
     "next.config.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
