@@ -7,22 +7,21 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "test": "turbo run test",
-    "test:watch": "turbo run test:watch",
-    "test:coverage": "turbo run test:coverage",
-    "start": "node apps/api/dist/server.js",
-    "prepare": "husky"
+    "start": "node apps/api/dist/server.js"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.3.1",
-    "@commitlint/config-conventional": "^20.3.1",
     "globals": "^16.5.0",
-    "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "turbo": "^2.6.1",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.1.0",
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.3.12",
+      "@types/react-dom": "^18.3.1"
+    }
+  },
   "engines": {
     "node": ">=20.x"
   }

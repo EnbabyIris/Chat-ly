@@ -2,57 +2,57 @@
  * Performance monitoring configuration
  */
 
-import { MonitoringConfig, AlertRule } from '../types/performance';
+import type { MonitoringConfig, AlertRule } from "../types/performance";
 
 export const DEFAULT_ALERT_RULES: AlertRule[] = [
   {
-    id: 'high-response-time',
-    name: 'High Response Time',
-    metric: 'http_request_duration_ms',
-    condition: 'gt',
+    id: "high-response-time",
+    name: "High Response Time",
+    metric: "http_request_duration_ms",
+    condition: "gt",
     threshold: 1000, // 1 second
     duration: 300, // 5 minutes
-    severity: 'medium',
+    severity: "medium",
     enabled: true,
   },
   {
-    id: 'high-error-rate',
-    name: 'High Error Rate',
-    metric: 'http_requests_total',
-    condition: 'gt',
+    id: "high-error-rate",
+    name: "High Error Rate",
+    metric: "http_requests_total",
+    condition: "gt",
     threshold: 0.05, // 5%
     duration: 300, // 5 minutes
-    severity: 'high',
+    severity: "high",
     enabled: true,
   },
   {
-    id: 'high-memory-usage',
-    name: 'High Memory Usage',
-    metric: 'process_memory_usage_mb',
-    condition: 'gt',
+    id: "high-memory-usage",
+    name: "High Memory Usage",
+    metric: "process_memory_usage_mb",
+    condition: "gt",
     threshold: 500, // 500MB
     duration: 60, // 1 minute
-    severity: 'medium',
+    severity: "medium",
     enabled: true,
   },
   {
-    id: 'high-cpu-usage',
-    name: 'High CPU Usage',
-    metric: 'process_cpu_usage_percent',
-    condition: 'gt',
+    id: "high-cpu-usage",
+    name: "High CPU Usage",
+    metric: "process_cpu_usage_percent",
+    condition: "gt",
     threshold: 80, // 80%
     duration: 300, // 5 minutes
-    severity: 'high',
+    severity: "high",
     enabled: true,
   },
   {
-    id: 'database-connection-pool-exhausted',
-    name: 'Database Connection Pool Exhausted',
-    metric: 'db_connection_pool_active_count',
-    condition: 'gte',
+    id: "database-connection-pool-exhausted",
+    name: "Database Connection Pool Exhausted",
+    metric: "db_connection_pool_active_count",
+    condition: "gte",
     threshold: 20, // 20 active connections
     duration: 60, // 1 minute
-    severity: 'critical',
+    severity: "critical",
     enabled: true,
   },
 ];
@@ -65,11 +65,11 @@ export const PRODUCTION_MONITORING_CONFIG: MonitoringConfig = {
   exporters: {
     console: false,
     file: {
-      path: '/var/log/chat-turbo/metrics.json',
-      format: 'json',
+      path: "/var/log/chat-turbo/metrics.json",
+      format: "json",
     },
     prometheus: {
-      endpoint: '/metrics',
+      endpoint: "/metrics",
       port: 9090,
     },
   },
@@ -79,15 +79,15 @@ export const DEVELOPMENT_MONITORING_CONFIG: MonitoringConfig = {
   enabled: true,
   samplingRate: 0.1, // Sample 10% of requests in development
   retentionPeriod: 7, // Keep metrics for 7 days
-  alertRules: DEFAULT_ALERT_RULES.map(rule => ({
+  alertRules: DEFAULT_ALERT_RULES.map((rule) => ({
     ...rule,
     enabled: false, // Disable alerts in development
   })),
   exporters: {
     console: true,
     file: {
-      path: './logs/metrics.json',
-      format: 'json',
+      path: "./logs/metrics.json",
+      format: "json",
     },
   },
 };
@@ -102,14 +102,16 @@ export const TESTING_MONITORING_CONFIG: MonitoringConfig = {
   },
 };
 
-export function getMonitoringConfig(nodeEnv: string = 'development'): MonitoringConfig {
+export function getMonitoringConfig(
+  nodeEnv: string = "development",
+): MonitoringConfig {
   switch (nodeEnv.toLowerCase()) {
-    case 'production':
+    case "production":
       return PRODUCTION_MONITORING_CONFIG;
-    case 'development':
+    case "development":
       return DEVELOPMENT_MONITORING_CONFIG;
-    case 'test':
-    case 'testing':
+    case "test":
+    case "testing":
       return TESTING_MONITORING_CONFIG;
     default:
       return DEVELOPMENT_MONITORING_CONFIG;

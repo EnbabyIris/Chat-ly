@@ -1,15 +1,15 @@
 /**
  * Socket.IO Client
- * 
+ *
  * Manages Socket.IO connection with authentication and event handling.
  */
 
-import { io, type Socket } from 'socket.io-client';
-import { tokenStorage } from '../api/client';
-import { SOCKET_EVENTS } from '../shared/constants';
-import type { SocketEvents } from '../shared/types';
+import { io, type Socket } from "socket.io-client";
+import { tokenStorage } from "../api/client";
+import { SOCKET_EVENTS } from "../shared/constants";
+import type { SocketEvents } from "../shared/types";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 class SocketClient {
   private socket: Socket<SocketEvents> | null = null;
@@ -31,7 +31,7 @@ class SocketClient {
 
     const accessToken = tokenStorage.getAccessToken();
     if (!accessToken) {
-      console.warn('No access token available for Socket.IO connection');
+      console.warn("No access token available for Socket.IO connection");
       return null;
     }
 
@@ -42,7 +42,7 @@ class SocketClient {
         auth: {
           token: accessToken,
         },
-        transports: ['websocket', 'polling'],
+        transports: ["websocket", "polling"],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: 1000,
@@ -52,7 +52,7 @@ class SocketClient {
       this.setupEventHandlers();
       return this.socket;
     } catch (error) {
-      console.error('Failed to create Socket.IO connection:', error);
+      console.error("Failed to create Socket.IO connection:", error);
       this.isConnecting = false;
       return null;
     }
@@ -64,29 +64,29 @@ class SocketClient {
   private setupEventHandlers(): void {
     if (!this.socket) return;
 
-    this.socket.on('connect', () => {
-      console.log('🔌 Socket.IO connected:', this.socket?.id);
+    this.socket.on("connect", () => {
+      console.log("🔌 Socket.IO connected:", this.socket?.id);
       this.isConnecting = false;
       this.reconnectAttempts = 0;
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('🔌 Socket.IO disconnected:', reason);
+    this.socket.on("disconnect", (reason) => {
+      console.log("🔌 Socket.IO disconnected:", reason);
       this.isConnecting = false;
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('🔌 Socket.IO connection error:', error);
+    this.socket.on("connect_error", (error) => {
+      console.error("🔌 Socket.IO connection error:", error);
       this.isConnecting = false;
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
+        console.error("Max reconnection attempts reached");
       }
     });
 
-    (this.socket as any).on('authenticated', (data: any) => {
-      console.log('✅ Socket.IO authenticated:', data);
+    (this.socket as any).on("authenticated", (data: any) => {
+      console.log("✅ Socket.IO authenticated:", data);
     });
   }
 

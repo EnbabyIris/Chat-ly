@@ -10,12 +10,14 @@ interface FloatingHeaderProps {
   currentUser: ChatUser;
   onCreateGroup: () => void;
   onUserSelect?: (user: UserListItem) => void;
+  onNotificationClick?: (chatId: string) => void;
 }
 
 export const FloatingHeader = ({
   currentUser,
   onCreateGroup,
   onUserSelect,
+  onNotificationClick,
 }: FloatingHeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -67,7 +69,7 @@ export const FloatingHeader = ({
       {/* Right side items */}
       <div className="flex items-center gap-3  ml-auto">
         <UserProfile user={currentUser} />
-        <NotificationBell />
+        <NotificationBell onNotificationClick={onNotificationClick} />
       </div>
 
       {/* Search Dialog */}

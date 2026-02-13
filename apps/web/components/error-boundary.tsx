@@ -1,58 +1,58 @@
-'use client'
+"use client";
 
-import React, { Component, ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import React, { Component, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
-  errorInfo?: React.ErrorInfo
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
 
     this.setState({
       error,
       errorInfo,
-    })
+    });
 
     // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo)
+    this.props.onError?.(error, errorInfo);
 
     // Report to error tracking service
-    if (typeof window !== 'undefined' && 'gtag' in window) {
-      ;(window as any).gtag('event', 'exception', {
+    if (typeof window !== "undefined" && "gtag" in window) {
+      (window as any).gtag("event", "exception", {
         description: error.toString(),
         fatal: false,
-      })
+      });
     }
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
-  }
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
@@ -64,22 +64,23 @@ export class ErrorBoundary extends Component<Props, State> {
                 Something went wrong
               </h1>
               <p className="text-muted-foreground mb-6">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                We're sorry, but something unexpected happened. Please try
+                refreshing the page.
               </p>
 
               <div className="flex gap-3 justify-center">
-                <Button onClick={this.handleReset} variant="default">
+                <Button onClick={this.handleReset} variant="primary">
                   Try Again
                 </Button>
                 <Button
                   onClick={() => window.location.reload()}
-                  variant="outline"
+                  variant="white"
                 >
                   Refresh Page
                 </Button>
               </div>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {process.env.NODE_ENV === "development" && this.state.error && (
                 <details className="mt-6 text-left">
                   <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
                     Error Details (Development)
@@ -93,49 +94,49 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
 // Hook for using error boundary in functional components
 export const useErrorHandler = () => {
   return (error: Error, errorInfo?: { componentStack?: string }) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo)
+    console.error("Error caught by useErrorHandler:", error, errorInfo);
 
     // Report to error tracking
-    if (typeof window !== 'undefined' && 'gtag' in window) {
-      ;(window as any).gtag('event', 'exception', {
+    if (typeof window !== "undefined" && "gtag" in window) {
+      (window as any).gtag("event", "exception", {
         description: error.toString(),
         fatal: false,
-      })
+      });
     }
-  }
-}
+  };
+};
 
 // Higher-order component for wrapping components with error boundary
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
+  errorBoundaryProps?: Omit<Props, "children">,
 ) => {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
       <Component {...props} />
     </ErrorBoundary>
-  )
+  );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
 
-  return WrappedComponent
-}
+  return WrappedComponent;
+};
 
 // Async error boundary for handling promise rejections
 export class AsyncErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -146,14 +147,14 @@ export class AsyncErrorBoundary extends Component<Props, State> {
           hasError: true,
           error: asyncError as Error,
           errorInfo,
-        })
-      })
+        });
+      });
     } else {
-      this.componentDidCatch(error, errorInfo)
+      this.componentDidCatch(error, errorInfo);
     }
   }
 
   render() {
-    return <ErrorBoundary {...this.props} />
+    return <ErrorBoundary {...this.props} />;
   }
 }

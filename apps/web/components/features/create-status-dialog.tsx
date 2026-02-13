@@ -53,10 +53,15 @@ export const CreateStatusDialog = ({ isOpen, onClose }: CreateStatusDialogProps)
     try {
       let imageUrl: string | undefined;
 
-      // Upload image to Cloudinary if we have a file
-      if (statusImageFile && isConfigured) {
-        const uploadResult = await uploadImage(statusImageFile, { folder: 'status-images' });
-        imageUrl = uploadResult.secure_url;
+      if (statusImageFile) {
+        if (isConfigured) {
+          // Upload to Cloudinary if configured
+          const uploadResult = await uploadImage(statusImageFile, { folder: 'status-images' });
+          imageUrl = uploadResult.secure_url;
+        } else if (statusImage) {
+          // Fallback: use the data URL directly when Cloudinary is not configured
+          imageUrl = statusImage;
+        }
       }
 
       const statusData = {

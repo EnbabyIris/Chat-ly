@@ -30,7 +30,7 @@ export class AppError extends Error {
 
   constructor(details: ErrorDetails) {
     super(details.message);
-    this.name = 'AppError';
+    this.name = "AppError";
     this.code = details.code;
     this.statusCode = details.statusCode;
     this.context = details.context;
@@ -49,7 +49,7 @@ export class AppError extends Error {
       statusCode: this.statusCode,
       context: this.context,
       retryable: this.retryable,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 }
@@ -71,7 +71,7 @@ export class ErrorHandler {
    */
   handle(error: Error | AppError, context?: ErrorContext): AppError {
     const appError = this.normalizeError(error, context);
-    
+
     this.incrementErrorCount(appError.code);
     this.logError(appError);
     this.notifyCallbacks(appError);
@@ -110,7 +110,7 @@ export class ErrorHandler {
     if (error instanceof AppError) {
       return error.retryable;
     }
-    
+
     // Default retry logic for common errors
     const retryablePatterns = [
       /timeout/i,
@@ -118,11 +118,11 @@ export class ErrorHandler {
       /network/i,
       /502/,
       /503/,
-      /504/
+      /504/,
     ];
 
-    return retryablePatterns.some(pattern => 
-      pattern.test(error.message) || pattern.test(error.name)
+    return retryablePatterns.some(
+      (pattern) => pattern.test(error.message) || pattern.test(error.name),
     );
   }
 
@@ -131,82 +131,85 @@ export class ErrorHandler {
    */
   createCircuitBreaker(
     errorThreshold: number = 5,
-    resetTimeout: number = 60000
+    resetTimeout: number = 60000,
   ) {
     let failureCount = 0;
     let lastFailureTime = 0;
-    let state: 'closed' | 'open' | 'half-open' = 'closed';
+    let state: "closed" | "open" | "half-open" = "closed";
 
     return {
       execute: async <T>(fn: () => Promise<T>): Promise<T> => {
         const now = Date.now();
-        
-        if (state === 'open') {
+
+        if (state === "open") {
           if (now - lastFailureTime > resetTimeout) {
-            state = 'half-open';
+            state = "half-open";
           } else {
             throw new AppError({
-              code: 'CIRCUIT_BREAKER_OPEN',
-              message: 'Circuit breaker is open',
+              code: "CIRCUIT_BREAKER_OPEN",
+              message: "Circuit breaker is open",
               statusCode: 503,
-              retryable: true
+              retryable: true,
             });
           }
         }
 
         try {
           const result = await fn();
-          
-          if (state === 'half-open') {
-            state = 'closed';
+
+          if (state === "half-open") {
+            state = "closed";
             failureCount = 0;
           }
-          
+
           return result;
         } catch (error) {
           failureCount++;
           lastFailureTime = now;
-          
+
           if (failureCount >= errorThreshold) {
-            state = 'open';
+            state = "open";
           }
-          
+
           throw error;
         }
       },
-      getState: () => ({ state, failureCount, lastFailureTime })
+      getState: () => ({ state, failureCount, lastFailureTime }),
     };
   }
 
-  private normalizeError(error: Error | AppError, context?: ErrorContext): AppError {
+  private normalizeError(
+    error: Error | AppError,
+    context?: ErrorContext,
+  ): AppError {
     if (error instanceof AppError) {
       return error;
     }
 
     let statusCode = 500;
-    let code = 'INTERNAL_ERROR';
+    let code = "INTERNAL_ERROR";
     let retryable = false;
 
     // Map common error patterns
-    if (error.message.includes('validation')) {
+    if (error.message.includes("validation")) {
       statusCode = 400;
-      code = 'VALIDATION_ERROR';
-    } else if (error.message.includes('unauthorized')) {
+      code = "VALIDATION_ERROR";
+    } else if (error.message.includes("unauthorized")) {
       statusCode = 401;
-      code = 'UNAUTHORIZED';
-    } else if (error.message.includes('forbidden')) {
+      code = "UNAUTHORIZED";
+    } else if (error.message.includes("forbidden")) {
       statusCode = 403;
-      code = 'FORBIDDEN';
-    } else if (error.message.includes('not found')) {
+      code = "FORBIDDEN";
+    } else if (error.message.includes("not found")) {
       statusCode = 404;
-      code = 'NOT_FOUND';
-    } else if (error.message.includes('timeout')) {
+      code = "NOT_FOUND";
+    } else if (error.message.includes("timeout")) {
       statusCode = 408;
-      code = 'TIMEOUT';
+      code = "TIMEOUT";
       retryable = true;
-    } else if (error.message.includes('rate limit')) {
+    } else if (error.message.includes("rate limit")) {
       statusCode = 429;
-      code = 'RATE_LIMITED';
+      code = "RATE_LIMITED";
       retryable = true;
     }
 
@@ -217,7 +220,7 @@ export class ErrorHandler {
       context,
       stack: error.stack,
       cause: error,
-      retryable
+      retryable,
     });
   }
 
@@ -229,26 +232,26 @@ export class ErrorHandler {
   private logError(error: AppError): void {
     const logData = {
       timestamp: new Date().toISOString(),
-      level: error.statusCode >= 500 ? 'error' : 'warn',
+      level: error.statusCode >= 500 ? "error" : "warn",
       code: error.code,
       message: error.message,
       statusCode: error.statusCode,
       context: error.context,
-      stack: error.statusCode >= 500 ? error.stack : undefined
+      stack: error.statusCode >= 500 ? error.stack : undefined,
     };
 
-    console.error('[ErrorHandler]', JSON.stringify(logData));
+    console.error("[ErrorHandler]", JSON.stringify(logData));
   }
 
   private notifyCallbacks(error: AppError): void {
     const callbacks = this.errorCallbacks.get(error.code) || [];
-    const allCallbacks = this.errorCallbacks.get('*') || [];
-    
-    [...callbacks, ...allCallbacks].forEach(callback => {
+    const allCallbacks = this.errorCallbacks.get("*") || [];
+
+    [...callbacks, ...allCallbacks].forEach((callback) => {
       try {
         callback(error);
       } catch (callbackError) {
-        console.error('Error in error callback:', callbackError);
+        console.error("Error in error callback:", callbackError);
       }
     });
   }
@@ -261,26 +264,26 @@ export const errorMiddleware = (
   error: Error,
   req: any,
   res: any,
-  next: any
+  _next: any,
 ) => {
   const handler = ErrorHandler.getInstance();
   const context: ErrorContext = {
     requestId: req.id,
     endpoint: req.path,
     timestamp: Date.now(),
-    userAgent: req.get('User-Agent'),
+    userAgent: req.get("User-Agent"),
     ip: req.ip,
-    userId: req.user?.id
+    userId: req.user?.id,
   };
 
   const appError = handler.handle(error, context);
-  
+
   res.status(appError.statusCode).json({
     error: {
       code: appError.code,
       message: appError.message,
-      ...(appError.statusCode < 500 && { context: appError.context })
-    }
+      ...(appError.statusCode < 500 && { context: appError.context }),
+    },
   });
 };
 

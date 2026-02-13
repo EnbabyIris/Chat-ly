@@ -2,20 +2,19 @@
  * Message validation configuration
  */
 
-import { MessageValidationRules, ValidationConfig } from '../types/message';
+import type {
+  MessageValidationRules,
+  ValidationConfig,
+} from "../types/message";
 
 export const DEFAULT_MESSAGE_VALIDATION_RULES: MessageValidationRules = {
   maxLength: 2000,
   minLength: 1,
-  allowedContentTypes: [
-    'text/plain',
-    'text/markdown',
-    'application/json'
-  ],
+  allowedContentTypes: ["text/plain", "text/markdown", "application/json"],
   forbiddenWords: [
-    'spam',
-    'advertisement',
-    'scam',
+    "spam",
+    "advertisement",
+    "scam",
     // Add more forbidden words as needed
   ],
   requireTimestamps: true,
@@ -29,8 +28,8 @@ export const STRICT_MESSAGE_VALIDATION_RULES: MessageValidationRules = {
   maxLength: 500,
   forbiddenWords: [
     ...DEFAULT_MESSAGE_VALIDATION_RULES.forbiddenWords,
-    'inappropriate',
-    'offensive',
+    "inappropriate",
+    "offensive",
     // Add more strict forbidden words
   ],
   maxAttachments: 2,
@@ -55,36 +54,40 @@ export const VALIDATION_CONFIG: ValidationConfig = {
     encoding: true,
   },
   severityLevels: {
-    length: 'error',
-    content_type: 'error',
-    profanity: 'error',
-    spam: 'warning',
-    attachments: 'error',
-    mentions: 'warning',
-    encoding: 'error',
+    length: "error",
+    content_type: "error",
+    profanity: "error",
+    spam: "warning",
+    attachments: "error",
+    mentions: "warning",
+    encoding: "error",
   },
 };
 
-export function getValidationRulesForUser(userTier: string): MessageValidationRules {
+export function getValidationRulesForUser(
+  userTier: string,
+): MessageValidationRules {
   switch (userTier.toLowerCase()) {
-    case 'free':
+    case "free":
       return STRICT_MESSAGE_VALIDATION_RULES;
-    case 'premium':
+    case "premium":
       return DEFAULT_MESSAGE_VALIDATION_RULES;
-    case 'enterprise':
+    case "enterprise":
       return LOOSE_MESSAGE_VALIDATION_RULES;
     default:
       return DEFAULT_MESSAGE_VALIDATION_RULES;
   }
 }
 
-export function getValidationRulesForChannel(channelType: string): MessageValidationRules {
+export function getValidationRulesForChannel(
+  channelType: string,
+): MessageValidationRules {
   switch (channelType.toLowerCase()) {
-    case 'public':
+    case "public":
       return STRICT_MESSAGE_VALIDATION_RULES;
-    case 'private':
+    case "private":
       return DEFAULT_MESSAGE_VALIDATION_RULES;
-    case 'announcements':
+    case "announcements":
       return LOOSE_MESSAGE_VALIDATION_RULES;
     default:
       return DEFAULT_MESSAGE_VALIDATION_RULES;

@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
-import { useRealTimeMessages } from './use-real-time-messages';
-import { useCloudinaryUpload } from '../lib/cloudinary';
-import { useGroqSuggestions } from './use-groq-suggestions';
-import type { ChatListItem, Message, SendMessageDTO } from '../lib/shared';
+import { useState, useRef, useCallback } from "react";
+import { useRealTimeMessages } from "./use-real-time-messages";
+import { useCloudinaryUpload } from "../lib/cloudinary";
+import { useGroqSuggestions } from "./use-groq-suggestions";
+import type { ChatListItem, Message, SendMessageDTO } from "../lib/shared";
 
 // TypeScript declarations for Web Speech API
 declare global {
@@ -20,14 +20,18 @@ interface SpeechRecognition extends EventTarget {
   stop(): void;
   abort(): void;
   onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
+  onresult:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any)
+    | null;
+  onerror:
+    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any)
+    | null;
   onend: ((this: SpeechRecognition, ev: Event) => any) | null;
 }
 
 declare var SpeechRecognition: {
   prototype: SpeechRecognition;
-  new(): SpeechRecognition;
+  new (): SpeechRecognition;
 };
 
 interface SpeechRecognitionEvent extends Event {
@@ -60,10 +64,14 @@ interface SpeechRecognitionAlternative {
 
 const useMessageInput = (
   selectedChat: ChatListItem | null,
-  sendMessage: (message: string, messageType?: SendMessageDTO['messageType'], locationData?: { latitude: number; longitude: number; address?: string }) => void,
+  sendMessage: (
+    message: string,
+    messageType?: SendMessageDTO["messageType"],
+    locationData?: { latitude: number; longitude: number; address?: string },
+  ) => void,
   sendFile: (file: File) => void,
   onTypingStart?: () => void,
-  onTypingStop?: () => void
+  onTypingStop?: () => void,
 ) => {
   // Get real-time messaging connection status
   const { isConnected } = useRealTimeMessages({
@@ -71,50 +79,64 @@ const useMessageInput = (
   });
 
   // Cloudinary upload hook
-  const { uploadImage, isConfigured: isCloudinaryConfigured } = useCloudinaryUpload();
+  const { uploadImage, isConfigured: isCloudinaryConfigured } =
+    useCloudinaryUpload();
 
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   // Groq AI suggestions with 600ms debounce
-  const { suggestion: aiMessage, isLoading: isAiLoading, error: aiError, clearSuggestion } = useGroqSuggestions(newMessage, {
+  const {
+    suggestion: aiMessage,
+    isLoading: isAiLoading,
+    error: aiError,
+    clearSuggestion,
+  } = useGroqSuggestions(newMessage, {
     debounceDelay: 600,
     minChars: 3,
   });
-  
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const typingHandler = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const currentValue = e.target.value;
-    setNewMessage(currentValue);
-    // AI suggestions are now handled automatically by useGroqSuggestions hook
-  }, []);
+  const typingHandler = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const currentValue = e.target.value;
+      setNewMessage(currentValue);
+      // AI suggestions are now handled automatically by useGroqSuggestions hook
+    },
+    [],
+  );
 
-  const onKeyDown = useCallback((e: KeyboardEvent | { key: string }) => {
-    if (e.key === 'Enter') {
-      if ('preventDefault' in e) {
-        e.preventDefault();
-      }
-      if (newMessage.trim()) {
-        sendMessage(newMessage.trim(), 'text');
-        setNewMessage('');
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent | { key: string }) => {
+      if (e.key === "Enter") {
+        if ("preventDefault" in e) {
+          e.preventDefault();
+        }
+        if (newMessage.trim()) {
+          sendMessage(newMessage.trim(), "text");
+          setNewMessage("");
+          clearSuggestion();
+        }
+      } else if (e.key === "Tab" && aiMessage) {
+        if ("preventDefault" in e) {
+          e.preventDefault();
+        }
+        // Append the completion to the existing message instead of replacing
+        const currentText = newMessage.trim();
+        const completion = aiMessage.trim();
+        const newText = currentText
+          ? `${currentText} ${completion}`
+          : completion;
+        setNewMessage(newText);
         clearSuggestion();
       }
-    } else if (e.key === 'Tab' && aiMessage) {
-      if ('preventDefault' in e) {
-        e.preventDefault();
-      }
-      // Append the completion to the existing message instead of replacing
-      const currentText = newMessage.trim();
-      const completion = aiMessage.trim();
-      const newText = currentText ? `${currentText} ${completion}` : completion;
-      setNewMessage(newText);
-      clearSuggestion();
-    }
-  }, [newMessage, aiMessage, sendMessage, clearSuggestion]);
+    },
+    [newMessage, aiMessage, sendMessage, clearSuggestion],
+  );
 
   const handleAISuggestionClick = useCallback(() => {
     if (aiMessage) {
@@ -131,48 +153,75 @@ const useMessageInput = (
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !selectedChat) return;
+  const handleFileSelect = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file || !selectedChat) return;
 
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-
-    // Check if it's an image and Cloudinary is configured
-    if (file.type.startsWith('image/') && isCloudinaryConfigured) {
-      try {
-        setIsUploading(true);
-
-        // Upload to Cloudinary
-        const uploadResult = await uploadImage(file, {
-          folder: 'chat-uploads',
-        });
-
-        // Send message with Cloudinary URL
-        sendMessage(uploadResult.secure_url, 'image');
-
-      } catch (error) {
-        console.error('Image upload failed:', error);
-        // Fallback to regular file upload if Cloudinary fails
-        sendFile(file);
-      } finally {
-        setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-    } else {
-      // For non-image files or when Cloudinary is not configured
-      sendFile(file);
-    }
-  }, [selectedChat, isCloudinaryConfigured, uploadImage, sendMessage, sendFile]);
+
+      // Check if it's an image and Cloudinary is configured
+      if (file.type.startsWith("image/") && isCloudinaryConfigured) {
+        try {
+          setIsUploading(true);
+
+          // Upload to Cloudinary
+          const uploadResult = await uploadImage(file, {
+            folder: "chat-uploads",
+          });
+
+          // Send message with Cloudinary URL
+          sendMessage(uploadResult.secure_url, "image");
+        } catch (error) {
+          console.error(
+            "Image upload failed, falling back to data URL:",
+            error,
+          );
+          // Fallback to data URL if Cloudinary fails
+          convertAndSendAsDataUrl(file);
+        } finally {
+          setIsUploading(false);
+        }
+      } else {
+        // For non-image files or when Cloudinary is not configured
+        // Convert to data URL and send via socket
+        convertAndSendAsDataUrl(file);
+      }
+    },
+    [selectedChat, isCloudinaryConfigured, uploadImage, sendMessage, sendFile],
+  );
+
+  // Helper to convert a file to data URL and send as a message
+  const convertAndSendAsDataUrl = useCallback(
+    (file: File) => {
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const isImage = file.type.startsWith("image/");
+        sendMessage(dataUrl, isImage ? "image" : "file");
+        setIsUploading(false);
+      };
+      reader.onerror = () => {
+        console.error("Failed to read file:", file.name);
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    },
+    [sendMessage],
+  );
 
   const toggleListening = useCallback(() => {
     if (!isListening) {
       // Start speech recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
       if (!SpeechRecognition) {
-        console.error('Speech recognition not supported in this browser');
+        console.error("Speech recognition not supported in this browser");
         return;
       }
 
@@ -181,16 +230,16 @@ const useMessageInput = (
       // Configure speech recognition
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
 
       recognition.onstart = () => {
         setIsListening(true);
-        console.log('Speech recognition started');
+        console.log("Speech recognition started");
       };
 
       recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        let finalTranscript = "";
+        let interimTranscript = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
@@ -207,20 +256,21 @@ const useMessageInput = (
         // Update the text input with the recognized speech
         if (finalTranscript) {
           const currentText = newMessage;
-          const newText = currentText ? `${currentText} ${finalTranscript}` : finalTranscript;
+          const newText = currentText
+            ? `${currentText} ${finalTranscript}`
+            : finalTranscript;
           setNewMessage(newText.trim());
-
         }
       };
 
       recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+        console.error("Speech recognition error:", event.error);
         setIsListening(false);
       };
 
       recognition.onend = () => {
         setIsListening(false);
-        console.log('Speech recognition ended');
+        console.log("Speech recognition ended");
       };
 
       // Store recognition instance for cleanup
@@ -241,7 +291,7 @@ const useMessageInput = (
 
   const handleSendLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      console.error('Geolocation is not supported by this browser');
+      console.error("Geolocation is not supported by this browser");
       return;
     }
 
@@ -254,7 +304,7 @@ const useMessageInput = (
         try {
           // Try to get address using reverse geocoding
           const response = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
           );
           const data = await response.json();
 
@@ -262,32 +312,32 @@ const useMessageInput = (
             ? `${data.localityInfo.administrative[2].name}, ${data.countryName}`
             : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
-          sendMessage('📍 Location shared', 'location', {
+          sendMessage("📍 Location shared", "location", {
             latitude,
             longitude,
-            address
+            address,
           });
         } catch (error) {
-          console.error('Failed to get address:', error);
+          console.error("Failed to get address:", error);
           // Send location without address if geocoding fails
-          sendMessage('📍 Location shared', 'location', {
+          sendMessage("📍 Location shared", "location", {
             latitude,
-            longitude
+            longitude,
           });
         }
 
         setIsGettingLocation(false);
       },
       (error) => {
-        console.error('Error getting location:', error);
+        console.error("Error getting location:", error);
         setIsGettingLocation(false);
         // Could show user-friendly error message here
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000 // 5 minutes
-      }
+        maximumAge: 300000, // 5 minutes
+      },
     );
   }, [sendMessage]);
 
@@ -295,12 +345,15 @@ const useMessageInput = (
     return inputRef.current;
   }, []);
 
-  const updateTextareaValue = useCallback((textarea: HTMLTextAreaElement, value: string) => {
-    if (textarea) {
-      textarea.value = value;
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }, []);
+  const updateTextareaValue = useCallback(
+    (textarea: HTMLTextAreaElement, value: string) => {
+      if (textarea) {
+        textarea.value = value;
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    },
+    [],
+  );
 
   return {
     newMessage,

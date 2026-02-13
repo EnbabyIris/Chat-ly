@@ -30,13 +30,17 @@ export class PerformanceMonitor {
   /**
    * Record a performance metric
    */
-  recordMetric(name: string, value: number, tags?: Record<string, string>): void {
+  recordMetric(
+    name: string,
+    value: number,
+    _tags?: Record<string, string>,
+  ): void {
     if (!this.enabled) return;
 
     if (!this.metrics.has(name)) {
       this.metrics.set(name, []);
     }
-    
+
     this.metrics.get(name)!.push(value);
   }
 
@@ -56,7 +60,7 @@ export class PerformanceMonitor {
       max: Math.max(...values),
       count: values.length,
       p95: this.percentile(sorted, 0.95),
-      p99: this.percentile(sorted, 0.99)
+      p99: this.percentile(sorted, 0.99),
     };
   }
 
@@ -103,10 +107,10 @@ export class PerformanceMonitor {
 export const performanceMiddleware = (monitor: PerformanceMonitor) => {
   return (req: any, res: any, next: any) => {
     const start = Date.now();
-    
-    res.on('finish', () => {
+
+    res.on("finish", () => {
       const duration = Date.now() - start;
-      const route = req.route?.path || 'unknown';
+      const route = req.route?.path || "unknown";
       monitor.recordMetric(`request_duration_${req.method}_${route}`, duration);
     });
 

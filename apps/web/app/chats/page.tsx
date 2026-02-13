@@ -72,6 +72,15 @@ function ChatsPageContent() {
     setIsStatusDialogOpen(true);
   }, []);
 
+  // Handle notification click - navigate to the chat
+  const handleNotificationClick = useCallback((chatId: string) => {
+    const chat = chats.find((c: any) => c.id === chatId);
+    if (chat) {
+      setSelectedChat(chat);
+      setActiveTab('chats');
+    }
+  }, [chats, setSelectedChat, setActiveTab]);
+
   // Handle successful group creation
   const handleGroupCreated = useCallback((chat: any) => {
     // Close the dialog first
@@ -163,6 +172,7 @@ function ChatsPageContent() {
           currentUser={activeCurrentUser}
           onCreateGroup={() => setIsCreateGroupDialogOpen(true)}
           onUserSelect={handleStartChat}
+          onNotificationClick={handleNotificationClick}
         />
       )}
 

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { FaGithub, FaLinkedin } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import Image from "next/image";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 interface FooterLink {
   name: string;
@@ -23,37 +23,37 @@ interface SocialLink {
 
 const footerLinks: FooterLinks = {
   Product: [
-    { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'Updates', href: '#updates' },
-    { name: 'Security', href: '#security' },
+    { name: "Features", href: "#features" },
+    { name: "Pricing", href: "#pricing" },
+    { name: "Updates", href: "#updates" },
+    { name: "Security", href: "#security" },
   ],
   Company: [
-    { name: 'About', href: '#about' },
-    { name: 'Blog', href: '#blog' },
-    { name: 'Careers', href: '#careers' },
-    { name: 'Contact', href: '#contact' },
+    { name: "About", href: "#about" },
+    { name: "Blog", href: "#blog" },
+    { name: "Careers", href: "#careers" },
+    { name: "Contact", href: "#contact" },
   ],
 };
 
 const socialLinks: SocialLink[] = [
   {
-    name: 'LinkedIn',
+    name: "LinkedIn",
     icon: FaLinkedin,
-    url: 'https://www.linkedin.com/in/dikshit-mahanot-723b012a3/',
-    color: 'hover:text-blue-500',
+    url: "https://www.linkedin.com/in/itsaryanchauhan/",
+    color: "hover:text-blue-500",
   },
   {
-    name: 'X (Twitter)',
+    name: "X (Twitter)",
     icon: FaXTwitter,
-    url: 'https://x.com/mahanot_dikshit/',
-    color: 'hover:text-white',
+    url: "https://x.com/itsrealaryan/",
+    color: "hover:text-white",
   },
   {
-    name: 'GitHub',
+    name: "GitHub",
     icon: FaGithub,
-    url: 'https://github.com/dikjain/chat_app',
-    color: 'hover:text-gray-300',
+    url: "https://github.com/itsaryanchauhan/Chat-ly",
+    color: "hover:text-gray-300",
   },
 ];
 
@@ -99,7 +99,9 @@ export const Footer = () => {
 
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title} className="md:col-span-1">
-              <h3 className="text-sm font-semibold font-inter mb-4 text-neutral-500">{title}</h3>
+              <h3 className="text-sm font-semibold font-inter mb-4 text-neutral-500">
+                {title}
+              </h3>
               <ul className="space-y-3">
                 {links.map((link: { name: string; href: string }) => (
                   <li key={link.name}>
@@ -125,4 +127,3 @@ export const Footer = () => {
     </footer>
   );
 };
-
